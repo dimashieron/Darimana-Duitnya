@@ -16,10 +16,11 @@ interface SettingsTabProps {
   onResetData: () => void;
   onSyncWithSpreadsheet: () => Promise<void>;
   syncLoading: boolean;
+  autoSyncing?: boolean;
 }
 
 export default function SettingsTab({ 
-  state, updateState, onResetData, onSyncWithSpreadsheet, syncLoading 
+  state, updateState, onResetData, onSyncWithSpreadsheet, syncLoading, autoSyncing 
 }: SettingsTabProps) {
   const [gasUrlInput, setGasUrlInput] = useState(state.gasUrl);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -137,20 +138,52 @@ export default function SettingsTab({
 
         {/* Sync Trigger Action if URL exists */}
         {state.gasUrl ? (
-          <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/60 dark:border-emerald-900/40 p-4 rounded-xl flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-450 font-bold">
-              <CheckCircle className="w-4.5 h-4.5" />
-              <span>Aplikasi terhubung ke Google Spreadsheet!</span>
+          <div className="space-y-3.5">
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/60 dark:border-emerald-900/40 p-4 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-450 font-bold">
+                <CheckCircle className="w-4.5 h-4.5" />
+                <span>Aplikasi terhubung ke Google Spreadsheet!</span>
+              </div>
+              <button
+                id="btn-sync-now"
+                onClick={onSyncWithSpreadsheet}
+                disabled={syncLoading}
+                className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
+                <span>{syncLoading ? 'Sinkronisasi...' : 'Sync Sekarang'}</span>
+              </button>
             </div>
-            <button
-              id="btn-sync-now"
-              onClick={onSyncWithSpreadsheet}
-              disabled={syncLoading}
-              className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
-              <span>{syncLoading ? 'Sinkronisasi...' : 'Sync Sekarang'}</span>
-            </button>
+
+            {/* Auto Sync Toggle Feature */}
+            <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-150 dark:border-slate-800/80 rounded-xl">
+              <div className="pr-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-850 dark:text-slate-200 block">Autosync (Sync Otomatis)</span>
+                  {autoSyncing && (
+                    <span className="inline-flex items-center gap-1 text-[9px] text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md animate-pulse">
+                      <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                      <span>Sedang Sinkron...</span>
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Otomatis kirim data ke Google Sheet setiap ada transaksi baru/perubahan</span>
+              </div>
+              <button
+                id="toggle-autosync"
+                type="button"
+                onClick={() => updateState({ autoSync: !state.autoSync })}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none ${
+                  state.autoSync !== false ? 'bg-emerald-500' : 'bg-slate-305 bg-slate-200 dark:bg-slate-705 dark:bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-250 ease-in-out ${
+                    state.autoSync !== false ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/40 p-4 rounded-xl text-xs text-amber-800 dark:text-amber-450 flex items-start gap-2.5 leading-relaxed font-sans">

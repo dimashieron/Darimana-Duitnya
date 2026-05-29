@@ -66,6 +66,8 @@ export default function App() {
   // Syncing states
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [autoSyncing, setAutoSyncing] = useState(false);
+  const skipAutoSyncRef = React.useRef(true); // skip on initial render mount
 
   // UTC clock status bar
   const [currentTime, setCurrentTime] = useState('');
@@ -74,6 +76,57 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('finance_tracker_state_v1', JSON.stringify(appState));
   }, [appState]);
+
+  // Autosync on data changes to remote Google Sheet database
+  useEffect(() => {
+    if (skipAutoSyncRef.current) {
+      skipAutoSyncRef.current = false;
+      return;
+    }
+
+    if (!appState.gasUrl || appState.autoSync === false) {
+      return;
+    }
+
+    // Debounce the auto sync by 1.5 seconds so we don't trigger multiple requests in quick succession
+    const debounceTimer = setTimeout(async () => {
+      setAutoSyncing(true);
+      try {
+        await fetch(appState.gasUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'sync_all',
+            transactions: appState.transactions,
+            wallets: appState.wallets,
+            savingGoals: appState.savingGoals,
+            emergencyFund: appState.emergencyFund,
+            investments: appState.investments,
+            budgets: appState.budgets,
+          }),
+        });
+        console.log('Automated sync to spreadsheet completed');
+      } catch (err) {
+        console.error('Automated sync failed:', err);
+      } finally {
+        setAutoSyncing(false);
+      }
+    }, 1500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [
+    appState.transactions,
+    appState.wallets,
+    appState.savingGoals,
+    appState.emergencyFund,
+    appState.investments,
+    appState.budgets,
+    appState.gasUrl,
+    appState.autoSync
+  ]);
 
   // Clock formatter
   useEffect(() => {
@@ -126,6 +179,7 @@ export default function App() {
   const handleResetData = () => {
     const confirmReset = window.confirm('Apakah Anda yakin ingin menyetel ulang data ke awal? Semua catatan transaksi dan anggaran akan dikosongkan.');
     if (confirmReset) {
+      skipAutoSyncRef.current = true; // Avoid pushing empty reset state immediately
       setAppState({
         ...INITIAL_STATE,
         gasUrl: appState.gasUrl, // Retain script API endpointURL
@@ -179,6 +233,7 @@ export default function App() {
           const resJson = await getRes.json();
           if (resJson.status === 'success' && resJson.data) {
             const data = resJson.data;
+            skipAutoSyncRef.current = true; // avoid syncing right back what we just pulled
             updateState({
               transactions: data.transactions || appState.transactions,
               wallets: data.wallets || appState.wallets,
@@ -238,6 +293,12 @@ export default function App() {
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 opacity-80" />
             <span>{currentTime || '09:41'}</span>
+            {autoSyncing && (
+              <span className="flex items-center gap-1.5 ml-2 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold transition-all animate-pulse">
+                <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                <span>Autosync...</span>
+              </span>
+            )}
           </span>
           <div className="h-4.5 w-24 bg-black dark:bg-slate-800 rounded-full flex justify-center items-center shadow-inner md:block hidden">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-800 dark:bg-slate-950 block mx-auto" />
@@ -309,6 +370,7 @@ export default function App() {
               onResetData={handleResetData}
               onSyncWithSpreadsheet={handleSyncWithSpreadsheet}
               syncLoading={syncLoading}
+              autoSyncing={autoSyncing}
             />
           )}
         </main>
