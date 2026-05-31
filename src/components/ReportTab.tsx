@@ -527,7 +527,7 @@ export default function ReportTab({ state, updateState, showToast }: ReportTabPr
  
         {/* Dynamic native calendar fields */}
         {dateFilterType === 'custom' && (
-          <div className="grid grid-cols-2 gap-3 pt-1 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 animate-fade-in">
             <div>
               <span className="text-[10px] text-slate-400 dark:text-slate-400 block mb-1 font-bold">MULAI TANGGAL</span>
               <input
