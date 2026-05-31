@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Wifi, ShieldCheck, Database, RefreshCw, AlertCircle, X, Check,
-  Sliders, Smartphone, Clock, Settings, ArrowLeft
+  ShieldCheck, Database, RefreshCw, AlertCircle, X, Check,
+  Sliders, Smartphone, Settings, ArrowLeft
 } from 'lucide-react';
 import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset } from './types';
 import { INITIAL_STATE } from './data';
@@ -69,9 +69,6 @@ export default function App() {
   const [autoSyncing, setAutoSyncing] = useState(false);
   const skipAutoSyncRef = React.useRef(true); // skip on initial render mount
 
-  // UTC clock status bar
-  const [currentTime, setCurrentTime] = useState('');
-
   // Save changes to localStorage on any state change
   useEffect(() => {
     localStorage.setItem('finance_tracker_state_v1', JSON.stringify(appState));
@@ -127,20 +124,6 @@ export default function App() {
     appState.gasUrl,
     appState.autoSync
   ]);
-
-  // Clock formatter
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      // Format as hours & minutes e.g. "09:41"
-      const hours = now.getHours().toString().padStart(2, '0');
-      const mins = now.getMinutes().toString().padStart(2, '0');
-      setCurrentTime(`${hours}:${mins}`);
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 1000 * 30);
-    return () => clearInterval(interval);
-  }, []);
 
   // Theme Controller
   useEffect(() => {
@@ -285,32 +268,16 @@ export default function App() {
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-800'} font-sans md:py-6 md:px-4 flex items-center justify-center transition-colors duration-200`}>
       
-      {/* Dynamic responsive simulator shell representing luxury iOS outlines */}
-      <div className={`w-full max-w-md md:rounded-[40px] md:shadow-2xl md:ring-12 ${isDarkTheme ? 'dark md:ring-slate-800 bg-slate-950' : 'md:ring-slate-900 bg-slate-50'} md:relative md:overflow-hidden md:border-[10px] md:border-slate-800 min-h-screen md:min-h-[820px] flex flex-col transition-colors`}>
+      {/* Sleek App Shell box responsive on desktop, native layout on mobile */}
+      <div className={`w-full max-w-md md:rounded-[36px] md:shadow-2xl md:ring-1 ${isDarkTheme ? 'dark md:ring-slate-800 bg-slate-950' : 'md:ring-slate-200 bg-slate-50'} md:relative md:overflow-hidden min-h-screen md:min-h-[820px] flex flex-col transition-colors`}>
         
-        {/* Device simulated status bar (09:41, WiFi, Battery style) */}
-        <div className="px-6 pt-3 pb-2 flex justify-between items-center text-xs font-bold text-slate-800 dark:text-slate-300 font-sans tracking-wide select-none">
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 opacity-80" />
-            <span>{currentTime || '09:41'}</span>
-            {autoSyncing && (
-              <span className="flex items-center gap-1.5 ml-2 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold transition-all animate-pulse">
-                <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-                <span>Autosync...</span>
-              </span>
-            )}
-          </span>
-          <div className="h-4.5 w-24 bg-black dark:bg-slate-800 rounded-full flex justify-center items-center shadow-inner md:block hidden">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-800 dark:bg-slate-950 block mx-auto" />
+        {/* Minimalist Floating Auto-Sync status indicator inside the shell */}
+        {autoSyncing && (
+          <div className="absolute top-4 right-4 z-40 bg-emerald-500/95 dark:bg-emerald-500/90 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse select-none pointer-events-none transition-all">
+            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+            <span>Autosync...</span>
           </div>
-          <div className="flex items-center gap-1.5 font-mono">
-            <Wifi className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="text-[10px]">LTE</span>
-            <div className="w-5.5 h-3 bg-slate-200 dark:bg-slate-800 border border-slate-350 dark:border-slate-700/80 rounded p-0.5 flex items-center">
-              <div className="bg-slate-800 dark:bg-emerald-400 h-full w-full rounded" />
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Tab Header breadcrumb bar (Only show if settings or nested views are loaded) */}
         {activeTab === 'settings' && (
