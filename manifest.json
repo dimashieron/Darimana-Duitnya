@@ -1,0 +1,21 @@
+{
+  "short_name": "Darimana Duitnya",
+  "name": "Darimana Duitnya - Pencatat Keuangan",
+  "icons": [
+    {
+      "src": "/src/assets/images/logo_1780313957191.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/src/assets/images/logo_1780313957191.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#10b981",
+  "display": "standalone",
+  "orientation": "portrait"
+}

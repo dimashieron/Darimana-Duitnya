@@ -1,5 +1,5 @@
 {
-  "name": "Finance Tracker Pro",
+  "name": "Darimana Duitnya",
   "description": "A high-fidelity, mobile-friendly finance tracker with custom wallets, saving targets, emergency fund allocation, budget planner, charts, and optional Google Sheets Apps Script synchronization.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
