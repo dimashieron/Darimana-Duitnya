@@ -10,7 +10,7 @@ import {
   Briefcase, Gift, Gamepad2, HelpCircle, TrendingUp, Info 
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType } from '../types';
-import { formatRupiah, formatReadableDate } from '../utils';
+import { formatRupiah, formatReadableDate, getLocalYYYYMMDD, getLocalNDaysAgoYYYYMMDD } from '../utils';
 
 interface HistoryTabProps {
   state: AppState;
@@ -23,13 +23,15 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'semua' | TransactionType>('semua');
   
-  // Date range filter states
+  const getTodayISO = () => getLocalYYYYMMDD();
+  const getNDaysAgoISO = (n: number) => getLocalNDaysAgoYYYYMMDD(n);
+
+  const todayStr = getTodayISO();
+
   const [dateFilterType, setDateFilterType] = useState<'semua' | 'today' | '7days' | '30days' | 'custom'>('semua');
-  const [customStartDate, setCustomStartDate] = useState('2026-05-01');
-  const [customEndDate, setCustomEndDate] = useState('2026-05-29');
+  const [customStartDate, setCustomStartDate] = useState(getNDaysAgoISO(30));
+  const [customEndDate, setCustomEndDate] = useState(todayStr);
   const [showDateFilterPanel, setShowDateFilterPanel] = useState(false);
-  
-  const todayStr = '2026-05-29';
 
   // States for absolute menus
   const [menuTxId, setMenuTxId] = useState<string | null>(null);
@@ -113,6 +115,10 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
             const goal = updatedSavingGoals.find(g => g.id === tx.destination);
             if (goal) goal.balance = Math.max(0, goal.balance - tx.nominal);
           }
+        } else if (tx.type === 'dana_darurat') {
+          const srcWallet = updatedWallets.find(w => w.id === tx.source);
+          if (srcWallet) srcWallet.balance += tx.nominal;
+          updatedEmergencyFund.balance = Math.max(0, updatedEmergencyFund.balance - tx.nominal);
         } else if (tx.type === 'investasi') {
           const srcWallet = updatedWallets.find(w => w.id === tx.source);
           if (srcWallet) srcWallet.balance += tx.nominal;
@@ -170,11 +176,9 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
       if (dateFilterType === 'today') {
         matchesDate = tx.date === todayStr;
       } else if (dateFilterType === '7days') {
-        // 7 days back from May 29, 2026 => May 22, 2026
-        matchesDate = tx.date >= '2026-05-22' && tx.date <= todayStr;
+        matchesDate = tx.date >= getNDaysAgoISO(7) && tx.date <= todayStr;
       } else if (dateFilterType === '30days') {
-        // 30 days back from May 29, 2026 => April 29, 2026
-        matchesDate = tx.date >= '2026-04-29' && tx.date <= todayStr;
+        matchesDate = tx.date >= getNDaysAgoISO(30) && tx.date <= todayStr;
       } else if (dateFilterType === 'custom') {
         if (customStartDate) {
           matchesDate = matchesDate && tx.date >= customStartDate;
@@ -337,8 +341,8 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
           <div className="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium px-0.5 leading-tight">
             {dateFilterType === 'semua' && 'Menampilkan seluruh riwayat transaksi Anda.'}
             {dateFilterType === 'today' && `Hari ini: ${formatReadableDate(todayStr)}`}
-            {dateFilterType === '7days' && `Periode 7 hari ke belakang (22 Mei 2026 - 29 Mei 2026).`}
-            {dateFilterType === '30days' && `Periode 30 hari ke belakang (29 Apr 2026 - 29 Mei 2026).`}
+            {dateFilterType === '7days' && `Periode 7 hari ke belakang (${formatReadableDate(getNDaysAgoISO(7))} - ${formatReadableDate(todayStr)}).`}
+            {dateFilterType === '30days' && `Periode 30 hari ke belakang (${formatReadableDate(getNDaysAgoISO(30))} - ${formatReadableDate(todayStr)}).`}
             {dateFilterType === 'custom' && `Periode custom: ${formatReadableDate(customStartDate)} s/d ${formatReadableDate(customEndDate)}.`}
           </div>
         </div>
@@ -406,11 +410,6 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
                   {' • '}
                   {formatReadableDate(tx.date)}
                 </p>
-                {tx.attachment && (
-                  <span className="inline-flex items-center gap-1 mt-1 text-[9px] bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 rounded text-emerald-500 font-bold border border-emerald-100 dark:border-emerald-950">
-                    📎 Struk terlampir
-                  </span>
-                )}
               </div>
             </div>
 

@@ -8,7 +8,7 @@ import {
   ShieldCheck, Database, RefreshCw, AlertCircle, X, Check,
   Sliders, Smartphone, Settings, ArrowLeft
 } from 'lucide-react';
-import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset } from './types';
+import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset, TransactionType } from './types';
 import { INITIAL_STATE } from './data';
 import BottomNav from './components/BottomNav';
 import DashboardTab from './components/DashboardTab';
@@ -58,7 +58,7 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [prepopulatedParams, setPrepopulatedParams] = useState<{
-    type: 'investasi' | 'pengeluaran' | 'pendapatan' | 'tabungan' | 'jual_aset';
+    type: TransactionType;
     source?: string;
     destination?: string;
   } | null>(null);
@@ -247,7 +247,7 @@ export default function App() {
 
   // Prepopulate form triggers
   const openTransactionWithParams = (params: { 
-    type: 'investasi' | 'pengeluaran' | 'pendapatan' | 'tabungan' | 'jual_aset'; 
+    type: TransactionType; 
     source?: string; 
     destination?: string; 
   }) => {

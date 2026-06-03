@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type TransactionType = 'pengeluaran' | 'pendapatan' | 'transfer' | 'tabungan' | 'investasi' | 'jual_aset';
+export type TransactionType = 'pengeluaran' | 'pendapatan' | 'transfer' | 'tabungan' | 'dana_darurat' | 'investasi' | 'jual_aset';
 
 export interface Transaction {
   id: string;
@@ -58,6 +58,7 @@ export interface AppCategory {
   icon: string;
   color: string;
   isDefault?: boolean;
+  txType?: 'pengeluaran' | 'pendapatan';
 }
 
 export interface AppState {

@@ -68,3 +68,25 @@ export function formatReadableDate(dateStr: string): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
+
+/**
+ * Returns current local date in YYYY-MM-DD format
+ */
+export function getLocalYYYYMMDD(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns local YYYY-MM-DD date representation N days ago
+ */
+export function getLocalNDaysAgoYYYYMMDD(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

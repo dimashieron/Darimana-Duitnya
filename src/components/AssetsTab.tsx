@@ -69,15 +69,25 @@ export default function AssetsTab({
 
   // Investment Percentages
   const getInvestmentPercentages = () => {
-    if (totalInvestasi === 0) return { emas: 33, crypto: 33, saham: 34 };
-    const emas = state.investments.find(i => i.id === 'emas')?.value || 0;
-    const crypto = state.investments.find(i => i.id === 'crypto')?.value || 0;
-    const saham = state.investments.find(i => i.id === 'saham')?.value || 0;
-    return {
-      emas: Math.round((emas / totalInvestasi) * 100),
-      crypto: Math.round((crypto / totalInvestasi) * 100),
-      saham: Math.round((saham / totalInvestasi) * 100),
-    };
+    if (totalInvestasi === 0) {
+      const defaultPercents: Record<string, number> = {};
+      state.investments.forEach(i => {
+        defaultPercents[i.id] = 0;
+      });
+      return defaultPercents;
+    }
+    const percents: Record<string, number> = {};
+    let sum = 0;
+    state.investments.forEach((inv, idx) => {
+      if (idx === state.investments.length - 1) {
+        percents[inv.id] = Math.max(0, 100 - sum);
+      } else {
+        const p = Math.round((inv.value / totalInvestasi) * 100);
+        percents[inv.id] = p;
+        sum += p;
+      }
+    });
+    return percents;
   };
 
   const invPct = getInvestmentPercentages();
@@ -185,14 +195,34 @@ export default function AssetsTab({
         }
       });
     } else {
+      const walletId = `wallet_${generateId()}`;
       const newWallet: WalletType = {
-        id: `wallet_${generateId()}`,
+        id: walletId,
         name,
         balance,
         icon: walletIcon,
         color: walletColor,
       };
-      updateState({ wallets: [...state.wallets, newWallet] });
+
+      const updateData: Partial<AppState> = {
+        wallets: [...state.wallets, newWallet]
+      };
+
+      if (balance > 0) {
+        const txObj = {
+          id: `tx_${generateId()}`,
+          type: 'pendapatan' as const,
+          nominal: balance,
+          category: 'Lainnya',
+          date: new Date().toISOString().split('T')[0],
+          source: walletId,
+          notes: `Saldo Awal Dompet ${name}`,
+          timestamp: Date.now(),
+        };
+        updateData.transactions = [txObj, ...state.transactions];
+      }
+
+      updateState(updateData);
 
       // Reset and close
       setWalletName('');
@@ -641,20 +671,31 @@ export default function AssetsTab({
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="15.915" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
                 
-                {/* Gold */}
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" strokeWidth="3.2" 
-                  strokeDasharray={`${invPct.emas} ${100 - invPct.emas}`} 
-                  strokeDashoffset="100" />
-                
-                {/* Crypto */}
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" strokeWidth="3.2" 
-                  strokeDasharray={`${invPct.crypto} ${100 - invPct.crypto}`} 
-                  strokeDashoffset={`${100 - invPct.emas}`} />
-                
-                {/* Saham */}
-                <circle cx="18" cy="18" r="15.915" fill="none" stroke="#06b6d4" strokeWidth="3.2" 
-                  strokeDasharray={`${100 - invPct.emas - invPct.crypto} ${invPct.emas + invPct.crypto}`} 
-                  strokeDashoffset={`${100 - invPct.emas - invPct.crypto}`} />
+                {(() => {
+                  let cumOffset = 100;
+                  const strokes = ['#f59e0b', '#10b981', '#06b6d4', '#6366f1', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e'];
+                  return state.investments.map((inv, idx) => {
+                    const percentage = invPct[inv.id] || 0;
+                    if (percentage === 0) return null;
+                    const strokeColor = strokes[idx % strokes.length];
+                    const dashArray = `${percentage} ${100 - percentage}`;
+                    const dashOffset = cumOffset;
+                    cumOffset -= percentage;
+                    return (
+                      <circle 
+                        key={inv.id}
+                        cx="18" 
+                        cy="18" 
+                        r="15.915" 
+                        fill="none" 
+                        stroke={strokeColor} 
+                        strokeWidth="3.2" 
+                        strokeDasharray={dashArray} 
+                        strokeDashoffset={dashOffset} 
+                      />
+                    );
+                  });
+                })()}
               </svg>
             </div>
           </div>
@@ -664,18 +705,15 @@ export default function AssetsTab({
             <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-4 px-1">Alokasi Investasi</h4>
             
             <div className="space-y-4">
-              {state.investments.map((inv) => {
-                const colors: Record<string, string> = {
-                  emas: 'bg-amber-500',
-                  crypto: 'bg-emerald-500',
-                  saham: 'bg-cyan-500',
-                };
-                const percentage = inv.id === 'emas' ? invPct.emas : inv.id === 'crypto' ? invPct.crypto : invPct.saham;
+              {state.investments.map((inv, idx) => {
+                const strokeColors = ['bg-amber-500', 'bg-emerald-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-pink-500', 'bg-purple-500', 'bg-teal-500', 'bg-rose-500'];
+                const badgeColor = strokeColors[idx % strokeColors.length];
+                const percentage = invPct[inv.id] || 0;
 
                 return (
                   <div key={inv.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className={`w-3 h-3 rounded-full ${colors[inv.id] || 'bg-slate-250'}`} />
+                      <span className={`w-3 h-3 rounded-full ${badgeColor}`} />
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{inv.name}</span>

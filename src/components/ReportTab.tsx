@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { FileDown, Calendar, Check } from 'lucide-react';
 import { AppState } from '../types';
-import { formatRupiah, formatReadableDate } from '../utils';
+import { formatRupiah, formatReadableDate, getLocalYYYYMMDD, getLocalNDaysAgoYYYYMMDD } from '../utils';
 
 interface ReportTabProps {
   state: AppState;
@@ -15,12 +15,15 @@ interface ReportTabProps {
 }
 
 export default function ReportTab({ state, updateState, showToast }: ReportTabProps) {
-  const [dateFilterType, setDateFilterType] = useState<'semua' | 'today' | '7days' | '30days' | 'custom'>('30days');
-  const [customStartDate, setCustomStartDate] = useState('2026-05-01');
-  const [customEndDate, setCustomEndDate] = useState('2026-05-29');
-  const [showExportToast, setShowExportToast] = useState<string | null>(null);
+  const getTodayISO = () => getLocalYYYYMMDD();
+  const getNDaysAgoISO = (n: number) => getLocalNDaysAgoYYYYMMDD(n);
 
-  const todayStr = '2026-05-29';
+  const todayStr = getTodayISO();
+
+  const [dateFilterType, setDateFilterType] = useState<'semua' | 'today' | '7days' | '30days' | 'custom'>('30days');
+  const [customStartDate, setCustomStartDate] = useState(getNDaysAgoISO(30));
+  const [customEndDate, setCustomEndDate] = useState(todayStr);
+  const [showExportToast, setShowExportToast] = useState<string | null>(null);
 
   // Compute standard ISO YYYY-MM-DD
   let isoStart = '';
@@ -30,10 +33,10 @@ export default function ReportTab({ state, updateState, showToast }: ReportTabPr
     isoStart = todayStr;
     isoEnd = todayStr;
   } else if (dateFilterType === '7days') {
-    isoStart = '2026-05-22';
+    isoStart = getNDaysAgoISO(7);
     isoEnd = todayStr;
   } else if (dateFilterType === '30days') {
-    isoStart = '2026-04-29';
+    isoStart = getNDaysAgoISO(30);
     isoEnd = todayStr;
   } else if (dateFilterType === 'custom') {
     isoStart = customStartDate;
@@ -564,8 +567,8 @@ export default function ReportTab({ state, updateState, showToast }: ReportTabPr
         <div className="text-[10px] text-slate-400 dark:text-slate-500 italic font-medium pt-0.5 leading-tight">
           {dateFilterType === 'semua' && 'Menampilkan seluruh riwayat transaksi Anda.'}
           {dateFilterType === 'today' && `Hari ini: ${formatReadableDate(todayStr)}`}
-          {dateFilterType === '7days' && `Periode 7 hari ke belakang (22 Mei 2026 - 29 Mei 2026).`}
-          {dateFilterType === '30days' && `Periode 30 hari ke belakang (29 Apr 2026 - 29 Mei 2026).`}
+          {dateFilterType === '7days' && `Periode 7 hari ke belakang (${formatReadableDate(isoStart)} - ${formatReadableDate(isoEnd)}).`}
+          {dateFilterType === '30days' && `Periode 30 hari ke belakang (${formatReadableDate(isoStart)} - ${formatReadableDate(isoEnd)}).`}
           {dateFilterType === 'custom' && `Periode custom: ${formatReadableDate(customStartDate)} s/d ${formatReadableDate(customEndDate)}.`}
         </div>
       </div>

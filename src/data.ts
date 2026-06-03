@@ -14,7 +14,11 @@ export const INITIAL_STATE: AppState = {
     { id: 'cash', name: 'Cash', balance: 0, icon: 'Wallet', color: 'emerald' },
     { id: 'rekening', name: 'Rekening', balance: 0, icon: 'CreditCard', color: 'blue' },
   ],
-  investments: [],
+  investments: [
+    { id: 'emas', name: 'Emas', qty: 'Miliki', value: 0, percentChange: 0 },
+    { id: 'saham', name: 'Saham', qty: 'Miliki', value: 0, percentChange: 0 },
+    { id: 'crypto', name: 'Kripto', qty: 'Miliki', value: 0, percentChange: 0 },
+  ],
   emergencyFund: {
     monthlyExpense: 0,
     monthTarget: 6,
