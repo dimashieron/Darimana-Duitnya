@@ -15,13 +15,22 @@ interface SettingsTabProps {
   state: AppState;
   updateState: (newState: Partial<AppState>) => void;
   onResetData: () => void;
-  onSyncWithSpreadsheet: () => Promise<void>;
-  syncLoading: boolean;
+  onUploadToSpreadsheet: () => Promise<void>;
+  onDownloadFromSpreadsheet: () => Promise<void>;
+  uploadLoading: boolean;
+  downloadLoading: boolean;
   autoSyncing?: boolean;
 }
 
 export default function SettingsTab({ 
-  state, updateState, onResetData, onSyncWithSpreadsheet, syncLoading, autoSyncing 
+  state, 
+  updateState, 
+  onResetData, 
+  onUploadToSpreadsheet, 
+  onDownloadFromSpreadsheet, 
+  uploadLoading, 
+  downloadLoading, 
+  autoSyncing 
 }: SettingsTabProps) {
   const [gasUrlInput, setGasUrlInput] = useState(state.gasUrl);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -258,21 +267,39 @@ function updateSheet(ss, sheetName, dataArray) {
 
         {/* Sync Trigger Action if URL exists */}
         {state.gasUrl ? (
-          <div className="space-y-3.5">
-            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/60 dark:border-emerald-900/40 p-4 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-450 font-bold">
-                <CheckCircle className="w-4.5 h-4.5" />
-                <span>Aplikasi terhubung ke Google Spreadsheet!</span>
+          <div className="space-y-3.5 font-sans">
+            <div className="bg-emerald-50/55 dark:bg-emerald-955/20 border border-emerald-100/50 dark:border-emerald-900/40 p-4 rounded-2xl space-y-3.5">
+              <div className="flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-400 font-bold">
+                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                <span>Koneksi Google Spreadsheet Aktif!</span>
               </div>
-              <button
-                id="btn-sync-now"
-                onClick={onSyncWithSpreadsheet}
-                disabled={syncLoading}
-                className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
-                <span>{syncLoading ? 'Sinkronisasi...' : 'Sync Sekarang'}</span>
-              </button>
+              
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  id="btn-upload-sheets"
+                  onClick={onUploadToSpreadsheet}
+                  disabled={uploadLoading}
+                  className="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 text-white text-xs font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${uploadLoading ? 'animate-spin' : ''}`} />
+                  <span>{uploadLoading ? 'Mengirim...' : 'Kirim Ke Sheet'}</span>
+                </button>
+
+                <button
+                  id="btn-download-sheets"
+                  onClick={onDownloadFromSpreadsheet}
+                  disabled={downloadLoading}
+                  className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${downloadLoading ? 'animate-spin' : ''}`} />
+                  <span>{downloadLoading ? 'Mengambil...' : 'Tarik Ke HP'}</span>
+                </button>
+              </div>
+              
+              <div className="text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-2.5 space-y-1 select-none">
+                <p>• <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Kirim Ke Sheet (Upload):</span> Menyimpan seluruh catatan harian, saldo dompet, dan target tabungan Anda dari HP ini langsung ke Google Sheet.</p>
+                <p>• <span className="font-extrabold text-indigo-500">Tarik Ke HP (Download):</span> Memulihkan seluruh data riwayat transaksi Anda dari Google Sheet untuk di-import kembali ke HP ini.</p>
+              </div>
             </div>
 
             {/* Auto Sync Toggle Feature */}
@@ -430,7 +457,7 @@ function updateSheet(ss, sheetName, dataArray) {
                 <li>Klik <strong className="text-slate-455">Advanced</strong> &gt; <strong className="text-slate-850 dark:text-slate-101">Go to Untitled Project (unsafe)</strong> untuk memberikan izin. Klik <strong className="text-slate-850 dark:text-slate-101">Allow/Izinkan</strong>.</li>
                 <li>Salin <strong className="text-slate-800 dark:text-slate-100">URL Aplikasi Web</strong> yang diberikan (berakhiran <code className="bg-slate-150 dark:bg-slate-900 px-1 py-0.5 rounded text-[10px]">/exec</code>).</li>
                 <li>Kirim tautan tersebut ke HP Anda (lewat WA, email, Telegram, dsb.).</li>
-                <li>Di HP Anda, buka aplikasi ini, paste di kolom atas, lalu pilih <strong className="text-slate-850 dark:text-slate-101">Simpan</strong> dan ketuk <strong className="text-emerald-500 font-bold">Sync Sekarang</strong>!</li>
+                <li>Di HP Anda, buka aplikasi ini, paste di kolom atas, lalu pilih <strong className="text-slate-850 dark:text-slate-101">Simpan</strong> dan ketuk <strong className="text-emerald-500 font-bold">Kirim Ke Sheet</strong>!</li>
               </ol>
             </div>
           )}

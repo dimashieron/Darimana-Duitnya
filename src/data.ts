@@ -9,7 +9,7 @@ export const INITIAL_STATE: AppState = {
   userName: 'Pengguna Baru',
   theme: 'light',
   gasUrl: '',
-  autoSync: true,
+  autoSync: false,
   wallets: [
     { id: 'cash', name: 'Cash', balance: 0, icon: 'Wallet', color: 'emerald' },
     { id: 'rekening', name: 'Rekening', balance: 0, icon: 'CreditCard', color: 'blue' },

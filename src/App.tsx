@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset, TransactionType } from './types';
 import { INITIAL_STATE } from './data';
+import { sanitizeAppState } from './utils';
 import BottomNav from './components/BottomNav';
 import DashboardTab from './components/DashboardTab';
 import AssetsTab from './components/AssetsTab';
@@ -25,10 +26,7 @@ export default function App() {
       const stored = localStorage.getItem('finance_tracker_state_v1');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (!parsed.categories || parsed.categories.length === 0) {
-          parsed.categories = INITIAL_STATE.categories;
-        }
-        return parsed;
+        return sanitizeAppState(parsed, INITIAL_STATE);
       }
     } catch (e) {
       console.error('Failed to parse local storage, loading default data', e);
@@ -64,7 +62,8 @@ export default function App() {
   } | null>(null);
 
   // Syncing states
-  const [syncLoading, setSyncLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const skipAutoSyncRef = React.useRef(true); // skip on initial render mount
@@ -82,6 +81,13 @@ export default function App() {
     }
 
     if (!appState.gasUrl || appState.autoSync === false) {
+      return;
+    }
+
+    // SAFEGUARD: Jangan biarkan autosync otomatis mengunggah data kosong ke Google Sheets.
+    // Jika data transaksi di HP kosong, jangan lakukan autosync. Ini mencegah
+    // HP baru / Shortcut baru yang masih kosong menimpa atau menghapus isi spreadsheet Anda!
+    if (appState.transactions.length === 0) {
       return;
     }
 
@@ -174,21 +180,21 @@ export default function App() {
     }
   };
 
-  // Google Apps Script spreadsheets synchronization callback
-  const handleSyncWithSpreadsheet = async () => {
+  // Google Apps Script spreadsheets: Push local data to Sheets
+  const handleUploadToSpreadsheet = async () => {
     if (!appState.gasUrl) {
       setSyncFeedback({ type: 'error', message: 'Tolong tautkan link URL Apps Script valid di tab Pengaturan.' });
       return;
     }
 
-    setSyncLoading(true);
+    setUploadLoading(true);
     setSyncFeedback(null);
 
     try {
       // POST the current state metadata to Spreadsheet database
-      const response = await fetch(appState.gasUrl, {
+      await fetch(appState.gasUrl, {
         method: 'POST',
-        mode: 'no-cors', // Apps Script handles CORS better if JSON values POSTed as standard payloads, but no-cors makes it fire-and-forget.
+        mode: 'no-cors', // fire-and-forget, bypasses typical browser sandbox restrictions
         headers: {
           'Content-Type': 'application/json',
         },
@@ -203,44 +209,80 @@ export default function App() {
         }),
       });
 
-      // Since no-cors makes standard response bodies opaque, we display clear instructions and complete successful feedback.
       setSyncFeedback({ 
         type: 'success', 
-        message: 'Berhasil dikirim! Silakan periksa Google Sheet TRANSAKSI, DOMPET, TABUNGAN Anda.' 
+        message: 'Data HP berhasil dicadangkan ke Google Sheet! Silakan cek spreadsheet Anda.' 
       });
-
-      // Quick fallback: Let's also do a standard fetch GET to pull down spreadsheets data if CORS allows it
-      try {
-        const getRes = await fetch(appState.gasUrl);
-        if (getRes.ok) {
-          const resJson = await getRes.json();
-          if (resJson.status === 'success' && resJson.data) {
-            const data = resJson.data;
-            skipAutoSyncRef.current = true; // avoid syncing right back what we just pulled
-            updateState({
-              transactions: data.transactions || appState.transactions,
-              wallets: data.wallets || appState.wallets,
-              savingGoals: data.savingGoals || appState.savingGoals,
-              emergencyFund: data.emergencyFund || appState.emergencyFund,
-              investments: data.investments || appState.investments,
-              budgets: data.budgets || appState.budgets,
-            });
-            setSyncFeedback({ type: 'success', message: 'Data spreadsheet berhasil dimuat ke aplikasi!' });
-          }
-        }
-      } catch (getErr) {
-         // Gracefully skip standard GET pull if CORS restrictions prevent it, standard POST sync is already complete.
-         console.warn('GET skipped due to opaque sandbox rules', getErr);
-      }
-
     } catch (error) {
-      console.error('Error synchronizing Google Sheets:', error);
+      console.error('Error uploading to Google Sheets:', error);
       setSyncFeedback({ 
         type: 'error', 
-        message: 'Gagal menghubungkan. Periksa status otorisasi Apps Script atau URL Anda.' 
+        message: 'Gagal mengunggah data. Periksa URL Apps Script Anda.' 
       });
     } finally {
-      setSyncLoading(false);
+      setUploadLoading(false);
+      setTimeout(() => setSyncFeedback(null), 5000);
+    }
+  };
+
+  // Google Apps Script spreadsheets: Pull Sheets data to Local HP
+  const handleDownloadFromSpreadsheet = async () => {
+    if (!appState.gasUrl) {
+      setSyncFeedback({ type: 'error', message: 'Tolong tautkan link URL Apps Script valid di tab Pengaturan.' });
+      return;
+    }
+
+    const confirmPull = window.confirm(
+      'Apakah Anda yakin ingin menarik data dari Google Sheet? Seluruh catatan keuangan di HP saat ini akan ditimpa (overwrite) oleh data dari Google Sheet!'
+    );
+    if (!confirmPull) return;
+
+    setDownloadLoading(true);
+    setSyncFeedback(null);
+
+    try {
+      const getRes = await fetch(appState.gasUrl);
+      if (getRes.ok) {
+        const resJson = await getRes.json();
+        if (resJson.status === 'success' && resJson.data) {
+          const data = resJson.data;
+          
+          // Sanitize received data so we never import corruption (e.g. empty states, undefined or NaN values)
+          const sanitized = sanitizeAppState({
+            transactions: data.transactions,
+            wallets: data.wallets,
+            savingGoals: data.savingGoals,
+            emergencyFund: data.emergencyFund,
+            investments: data.investments,
+            budgets: data.budgets
+          }, INITIAL_STATE);
+
+          skipAutoSyncRef.current = true; // prevent instantly autosyncing right back what we just pulled
+          setAppState((prev) => ({
+            ...prev,
+            transactions: sanitized.transactions,
+            wallets: sanitized.wallets,
+            savingGoals: sanitized.savingGoals,
+            emergencyFund: sanitized.emergencyFund,
+            investments: sanitized.investments,
+            budgets: sanitized.budgets,
+          }));
+
+          setSyncFeedback({ type: 'success', message: 'Sukses memulihkan data dari Google Sheet ke HP Anda!' });
+        } else {
+          setSyncFeedback({ type: 'error', message: 'Google Sheet kosong atau rincian data tidak valid.' });
+        }
+      } else {
+        setSyncFeedback({ type: 'error', message: 'Mendapat respon tidak valid dari Apps Script (Bukan OK).' });
+      }
+    } catch (error) {
+      console.error('Error synchronizing Google Sheets download:', error);
+      setSyncFeedback({ 
+        type: 'error', 
+        message: 'Gagal mengunduh data. Pastikan Apps Script di-deploy dan dapat diakses publik.' 
+      });
+    } finally {
+      setDownloadLoading(false);
       setTimeout(() => setSyncFeedback(null), 5000);
     }
   };
@@ -335,8 +377,10 @@ export default function App() {
               state={appState} 
               updateState={updateState} 
               onResetData={handleResetData}
-              onSyncWithSpreadsheet={handleSyncWithSpreadsheet}
-              syncLoading={syncLoading}
+              onUploadToSpreadsheet={handleUploadToSpreadsheet}
+              onDownloadFromSpreadsheet={handleDownloadFromSpreadsheet}
+              uploadLoading={uploadLoading}
+              downloadLoading={downloadLoading}
               autoSyncing={autoSyncing}
             />
           )}
