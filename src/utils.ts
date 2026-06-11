@@ -200,3 +200,79 @@ export function getLocalNDaysAgoYYYYMMDD(n: number): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Recalculates wallet balances, investments, emergency fund, and saving goals
+ * based strictly on the sequence of transactions (ordered from oldest to newest).
+ */
+export function recalculateBalances(
+  transactions: Transaction[],
+  wallets: Wallet[],
+  investments: InvestmentAsset[],
+  savingGoals: SavingGoal[],
+  emergencyFund: EmergencyFund
+): {
+  wallets: Wallet[];
+  investments: InvestmentAsset[];
+  savingGoals: SavingGoal[];
+  emergencyFund: EmergencyFund;
+} {
+  // 1. Reset all balances to 0 or fallback values
+  const updatedWallets = wallets.map(w => ({ ...w, balance: 0 }));
+  const updatedInvestments = investments.map(inv => ({ ...inv, value: 0 }));
+  const updatedSavingGoals = savingGoals.map(g => ({ ...g, balance: 0 }));
+  const updatedEmergencyFund = { ...emergencyFund, balance: 0 };
+
+  // 2. Sort transactions from oldest to newest (ascending timestamp or date)
+  const sortedTx = [...transactions].sort((a, b) => {
+    if (a.timestamp !== b.timestamp) {
+      return a.timestamp - b.timestamp;
+    }
+    return a.date.localeCompare(b.date);
+  });
+
+  // 3. Process each transaction sequentially
+  sortedTx.forEach(tx => {
+    const nominal = tx.nominal || 0;
+    if (nominal <= 0) return;
+
+    if (tx.type === 'pendapatan') {
+      const w = updatedWallets.find(item => item.id === tx.source);
+      if (w) w.balance += nominal;
+    } else if (tx.type === 'pengeluaran') {
+      const w = updatedWallets.find(item => item.id === tx.source);
+      if (w) w.balance -= nominal;
+    } else if (tx.type === 'transfer') {
+      const srcW = updatedWallets.find(item => item.id === tx.source);
+      const dstW = updatedWallets.find(item => item.id === tx.destination);
+      if (srcW) srcW.balance -= nominal;
+      if (dstW) dstW.balance += nominal;
+    } else if (tx.type === 'tabungan') {
+      const srcW = updatedWallets.find(item => item.id === tx.source);
+      const goal = updatedSavingGoals.find(item => item.id === tx.destination);
+      if (srcW) srcW.balance -= nominal;
+      if (goal) goal.balance += nominal;
+    } else if (tx.type === 'dana_darurat') {
+      const srcW = updatedWallets.find(item => item.id === tx.source);
+      if (srcW) srcW.balance -= nominal;
+      updatedEmergencyFund.balance += nominal;
+    } else if (tx.type === 'investasi') {
+      const srcW = updatedWallets.find(item => item.id === tx.source);
+      const inv = updatedInvestments.find(item => item.id === tx.destination);
+      if (srcW) srcW.balance -= nominal;
+      if (inv) inv.value += nominal;
+    } else if (tx.type === 'jual_aset') {
+      const dstW = updatedWallets.find(item => item.id === tx.destination);
+      const inv = updatedInvestments.find(item => item.id === tx.source);
+      if (dstW) dstW.balance += nominal;
+      if (inv) inv.value = Math.max(0, inv.value - nominal);
+    }
+  });
+
+  return {
+    wallets: updatedWallets,
+    investments: updatedInvestments,
+    savingGoals: updatedSavingGoals,
+    emergencyFund: updatedEmergencyFund
+  };
+}

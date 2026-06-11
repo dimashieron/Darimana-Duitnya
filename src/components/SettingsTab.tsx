@@ -10,6 +10,7 @@ import {
   BookOpen, HelpCircle, ChevronDown, ChevronUp, Copy
 } from 'lucide-react';
 import { AppState, Wallet } from '../types';
+import { recalculateBalances } from '../utils';
 
 interface SettingsTabProps {
   state: AppState;
@@ -34,8 +35,11 @@ export default function SettingsTab({
 }: SettingsTabProps) {
   const [gasUrlInput, setGasUrlInput] = useState(state.gasUrl);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [activeGuide, setActiveGuide] = useState<'none' | 'mobile' | 'laptop'>('none');
   const [codeCopied, setCodeCopied] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [recalcSuccess, setRecalcSuccess] = useState(false);
 
   const scriptCode = `/**
  * Apps Script API Gateway untuk Finance Tracker Pro
@@ -155,7 +159,32 @@ function updateSheet(ss, sheetName, dataArray) {
   };
 
   const handleSaveGasUrl = () => {
-    updateState({ gasUrl: gasUrlInput.trim() });
+    const trimmed = gasUrlInput.trim();
+    setUrlError(null);
+    
+    if (trimmed === '') {
+      updateState({ gasUrl: '' });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+      return;
+    }
+
+    if (trimmed.includes('docs.google.com/spreadsheets')) {
+      setUrlError('Maaf, itu link Google Spreadsheet biasa. Anda harus meng-copy URL Web App dari Apps Script (yang berakhiran /exec). Silakan baca panduan di bawah!');
+      return;
+    }
+
+    if (trimmed.includes('script.google.com') && !trimmed.endsWith('/exec') && !trimmed.includes('/exec?')) {
+      setUrlError('Ini adalah link editor Apps Script. Silakan klik "Deploy" -> "New Deployment" dan salin URL Web App yang berakhiran dengan "/exec"!');
+      return;
+    }
+
+    if (!trimmed.startsWith('https://')) {
+      setUrlError('Format URL harus dimulai dengan https://');
+      return;
+    }
+
+    updateState({ gasUrl: trimmed });
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
   };
@@ -170,6 +199,29 @@ function updateSheet(ss, sheetName, dataArray) {
     link.download = `finance-tracker-pro-backup-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Recalculate transaction list sequential integrity balances
+  const handleRecalculate = () => {
+    setIsRecalculating(true);
+    setTimeout(() => {
+      const { wallets, investments, savingGoals, emergencyFund } = recalculateBalances(
+        state.transactions,
+        state.wallets,
+        state.investments,
+        state.savingGoals,
+        state.emergencyFund
+      );
+      updateState({
+        wallets,
+        investments,
+        savingGoals,
+        emergencyFund
+      });
+      setIsRecalculating(false);
+      setRecalcSuccess(true);
+      setTimeout(() => setRecalcSuccess(false), 2500);
+    }, 400);
   };
 
   return (
@@ -241,20 +293,23 @@ function updateSheet(ss, sheetName, dataArray) {
             <Database className="w-6 h-6 stroke-[2.2]" />
           </div>
           <div>
-            <h3 className="text-sm font-bold">Sinkronisasi Google Spreadsheet</h3>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Sinkronisasi Google Spreadsheet</h3>
             <p className="text-[10px] text-slate-400 font-sans mt-0.5">Simpan & kelola database keuangan di Google Sheet Anda</p>
           </div>
         </div>
 
         <div>
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Web App URL Google Apps Script</label>
+          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Web App URL Google Apps Script</label>
           <div className="flex gap-2">
             <input
               type="text"
               className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none"
               placeholder="https://script.google.com/macros/s/.../exec"
               value={gasUrlInput}
-              onChange={(e) => setGasUrlInput(e.target.value)}
+              onChange={(e) => {
+                setGasUrlInput(e.target.value);
+                setUrlError(null);
+              }}
             />
             <button
               onClick={handleSaveGasUrl}
@@ -263,6 +318,12 @@ function updateSheet(ss, sheetName, dataArray) {
               {saveSuccess ? <Check className="w-4 h-4" /> : 'Simpan'}
             </button>
           </div>
+          {urlError && (
+            <div className="mt-2 text-[11px] text-rose-500 font-bold flex items-start gap-1.5 leading-relaxed bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/50 dark:border-rose-900/40 p-2.5 rounded-lg">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-500" />
+              <span>{urlError}</span>
+            </div>
+          )}
         </div>
 
         {/* Sync Trigger Action if URL exists */}
@@ -303,10 +364,10 @@ function updateSheet(ss, sheetName, dataArray) {
             </div>
 
             {/* Auto Sync Toggle Feature */}
-            <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-150 dark:border-slate-800/80 rounded-xl">
+            <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl">
               <div className="pr-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-850 dark:text-slate-200 block">Autosync (Sync Otomatis)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">Autosync (Sync Otomatis)</span>
                   {autoSyncing && (
                     <span className="inline-flex items-center gap-1 text-[9px] text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md animate-pulse">
                       <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -321,7 +382,7 @@ function updateSheet(ss, sheetName, dataArray) {
                 type="button"
                 onClick={() => updateState({ autoSync: !state.autoSync })}
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none ${
-                  state.autoSync !== false ? 'bg-emerald-500' : 'bg-slate-305 bg-slate-200 dark:bg-slate-705 dark:bg-slate-700'
+                  state.autoSync !== false ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               >
                 <span
@@ -333,7 +394,7 @@ function updateSheet(ss, sheetName, dataArray) {
             </div>
           </div>
         ) : (
-          <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/40 p-4 rounded-xl text-xs text-amber-800 dark:text-amber-450 flex items-start gap-2.5 leading-relaxed font-sans">
+          <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/40 p-4 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5 leading-relaxed font-sans">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
               <strong>Petunjuk:</strong> Hubungkan database Google Sheets untuk menyimpan semua data transaksi, dompet, target tabungan, dan budget bulanan Anda secara persistent di awan (cloud)! Saling hubungkan lewat petunjuk setup mandiri di bawah ini.
@@ -404,32 +465,32 @@ function updateSheet(ss, sheetName, dataArray) {
               <h5 className="font-bold text-emerald-500 flex items-center gap-1">📱 Langkah Lengkap Setup Lewat HP (Tanpa Laptop!)</h5>
               
               <ol className="list-decimal pl-4.5 space-y-2">
-                <li>Buka browser <strong className="text-slate-800 dark:text-slate-100">Google Chrome / Safari</strong> di HP Anda.</li>
-                <li>Masuk ke <strong className="text-slate-800 dark:text-slate-100">sheets.google.com</strong>.</li>
+                <li>Buka browser <strong className="text-slate-800 dark:text-slate-200">Google Chrome / Safari</strong> di HP Anda.</li>
+                <li>Masuk ke <strong className="text-slate-800 dark:text-slate-200">sheets.google.com</strong>.</li>
                 <li>
-                  <strong className="text-rose-500">WAJIB AKTIFKAN SITUS DESKTOP!</strong>
-                  <div className="text-[10px] text-slate-550 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
-                    • Chrome HP: Ketuk <strong className="text-slate-800 dark:text-slate-100">titik tiga</strong> kanan atas &gt; centang <strong className="text-slate-800 dark:text-slate-100">"Situs Desktop"</strong>.<br />
-                    • Safari HP: Ketuk tombol <strong className="text-slate-800 dark:text-slate-100">"aA"</strong> kiri bawah &gt; pilih <strong className="text-slate-800 dark:text-slate-100">"Minta Situs Web Desktop"</strong>.
+                  <strong className="text-rose-500 dark:text-rose-400">WAJIB AKTIFKAN SITUS DESKTOP!</strong>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
+                    • Chrome HP: Ketuk <strong className="text-slate-800 dark:text-slate-200">titik tiga</strong> kanan atas &gt; centang <strong className="text-slate-800 dark:text-slate-200">"Situs Desktop"</strong>.<br />
+                    • Safari HP: Ketuk tombol <strong className="text-slate-800 dark:text-slate-200">"aA"</strong> kiri bawah &gt; pilih <strong className="text-slate-800 dark:text-slate-200">"Minta Situs Web Desktop"</strong>.
                   </div>
                 </li>
-                <li>Ketuk tombol <strong className="text-slate-850 dark:text-slate-100">+ (Kosong)</strong> untuk membuat spreadsheet baru. Beri nama di atas.</li>
-                <li>Zoom-in ke bar menu atas, ketuk <strong className="text-slate-850 dark:text-slate-100">Ekstensi (Extensions)</strong> &gt; pilih <strong className="text-slate-850 dark:text-slate-100">Apps Script</strong>.</li>
+                <li>Ketuk tombol <strong className="text-slate-800 dark:text-slate-200">+ (Kosong)</strong> untuk membuat spreadsheet baru. Beri nama di atas.</li>
+                <li>Zoom-in ke bar menu atas, ketuk <strong className="text-slate-800 dark:text-slate-200">Ekstensi (Extensions)</strong> &gt; pilih <strong className="text-slate-800 dark:text-slate-200">Apps Script</strong>.</li>
                 <li>Setelah tab Apps Script terbuka, hapus seluruh kode bawaan di dalam editor.</li>
-                <li>Ketuk tombol <strong className="text-emerald-500">"Salin Kode" (di atas)</strong> lalu tempelkan (paste) di layar editor tersebut.</li>
-                <li>Ketuk ikon <strong className="text-slate-850 dark:text-slate-100">Simpan (Disket)</strong> di bar atas.</li>
-                <li>Ketuk <strong className="text-slate-850 dark:text-slate-100">Terapkan (Deploy)</strong> &gt; pilih <strong className="text-slate-850 dark:text-slate-100">Penerapan Baru</strong>.</li>
+                <li>Ketuk tombol <strong className="text-emerald-500 font-bold">"Salin Kode" (di atas)</strong> lalu tempelkan (paste) di layar editor tersebut.</li>
+                <li>Ketuk ikon <strong className="text-slate-800 dark:text-slate-200">Simpan (Disket)</strong> di bar atas.</li>
+                <li>Ketuk <strong className="text-slate-800 dark:text-slate-200">Terapkan (Deploy)</strong> &gt; pilih <strong className="text-slate-800 dark:text-slate-200">Penerapan Baru</strong>.</li>
                 <li>
-                  Ketuk ikon <strong className="text-slate-850 dark:text-slate-100">Gerigi</strong> &gt; pilih <strong className="text-slate-850 dark:text-slate-100">Aplikasi Web (Web App)</strong>.
-                  <div className="text-[10px] text-slate-550 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
+                  Ketuk ikon <strong className="text-slate-800 dark:text-slate-200">Gerigi</strong> &gt; pilih <strong className="text-slate-800 dark:text-slate-200">Aplikasi Web (Web App)</strong>.
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
                     • Execute as: "Saya (email Anda)"<br />
                     • Who has access: "Siapa saja (Anyone)"
                   </div>
                 </li>
-                <li>Ketuk <strong className="text-slate-850 dark:text-slate-100">Deploy</strong> &gt; ketuk <strong className="text-slate-850 dark:text-slate-100">Authorize Access</strong> &gt; pilih akun Gmail Anda.</li>
-                <li>Jika ada peringatan keamanan Google, ketuk opsi <strong className="text-slate-855 dark:text-slate-100">Advanced/Lanjutan</strong> di bawah &gt; pilih ketuk <strong className="text-slate-855 dark:text-slate-100">Go to Untitled Project (unsafe)</strong>. Ketuk <strong className="text-emerald-500">Allow</strong>.</li>
-                <li>Salin <strong className="text-slate-800 dark:text-slate-100">URL Aplikasi Web</strong> yang ditampilkan (berakhiran <code className="bg-slate-150 dark:bg-slate-900 px-1 py-0.5 rounded text-[10px]">/exec</code>).</li>
-                <li>Tempelkan (paste) URL tersebut ke kolom input di atas, ketuk <strong className="text-slate-850 dark:text-slate-100">Simpan</strong>, dan nikmati sinkronisasi awan instan Anda! 🚀</li>
+                <li>Ketuk <strong className="text-slate-800 dark:text-slate-200">Deploy</strong> &gt; ketuk <strong className="text-slate-800 dark:text-slate-200">Authorize Access</strong> &gt; pilih akun Gmail Anda.</li>
+                <li>Jika ada peringatan keamanan Google, ketuk opsi <strong className="text-slate-800 dark:text-slate-200">Advanced/Lanjutan</strong> di bawah &gt; pilih ketuk <strong className="text-slate-800 dark:text-slate-200">Go to Untitled Project (unsafe)</strong>. Ketuk <strong className="text-emerald-500 font-bold">Allow</strong>.</li>
+                <li>Salin <strong className="text-slate-800 dark:text-slate-200">URL Aplikasi Web</strong> yang ditampilkan (berakhiran <code className="bg-slate-150 dark:bg-slate-900 px-1 py-0.5 rounded text-[10px]">/exec</code>).</li>
+                <li>Tempelkan (paste) URL tersebut ke kolom input di atas, ketuk <strong className="text-slate-800 dark:text-slate-200">Simpan</strong>, dan nikmati sinkronisasi awan instan Anda! 🚀</li>
               </ol>
             </div>
           )}
@@ -439,25 +500,25 @@ function updateSheet(ss, sheetName, dataArray) {
               <h5 className="font-bold text-emerald-500 flex items-center gap-1">💻 Langkah Setup Google Sheets Lewat Laptop / PC</h5>
               
               <ol className="list-decimal pl-4.5 space-y-2">
-                <li>Buka browser komputer, masuk ke <strong className="text-slate-800 dark:text-slate-100">sheets.google.com</strong>.</li>
-                <li>Buat Spreadsheet baru, klik ikon <strong className="text-slate-850 dark:text-slate-101">+ (Kosong)</strong>.</li>
-                <li>Klik menu <strong className="text-slate-850 dark:text-slate-101">Ekstensi (Extensions)</strong> di bar atas &gt; klik <strong className="text-slate-850 dark:text-slate-101">Apps Script</strong>.</li>
-                <li>Hapus kode bawaan. Klik tombol <strong className="text-emerald-500">"Salin Kode" (di atas)</strong> lalu paste di editor.</li>
-                <li>Klik ikon <strong className="text-slate-850 dark:text-slate-101">Simpan (Disket)</strong> di samping kiri atas editor.</li>
-                <li>Klik tombol <strong className="text-slate-850 dark:text-slate-101">Deploy</strong> biru &gt; <strong className="text-slate-850 dark:text-slate-101">New Deployment</strong>.</li>
-                <li>Klik ikon <strong className="text-slate-850 dark:text-slate-101">Gerigi</strong> kiri atas, pilih tipe <strong className="text-slate-850 dark:text-slate-101">Web App</strong>.</li>
+                <li>Buka browser komputer, masuk ke <strong className="text-slate-800 dark:text-slate-200">sheets.google.com</strong>.</li>
+                <li>Buat Spreadsheet baru, klik ikon <strong className="text-slate-800 dark:text-slate-200 font-bold">+ (Kosong)</strong>.</li>
+                <li>Klik menu <strong className="text-slate-800 dark:text-slate-200 font-bold">Ekstensi (Extensions)</strong> di bar atas &gt; klik <strong className="text-slate-800 dark:text-slate-200 font-bold">Apps Script</strong>.</li>
+                <li>Hapus kode bawaan. Klik tombol <strong className="text-emerald-500 font-bold">"Salin Kode" (di atas)</strong> lalu paste di editor.</li>
+                <li>Klik ikon <strong className="text-slate-800 dark:text-slate-200 font-bold">Simpan (Disket)</strong> di samping kiri atas editor.</li>
+                <li>Klik tombol <strong className="text-slate-800 dark:text-slate-200 font-bold">Deploy</strong> biru &gt; <strong className="text-slate-800 dark:text-slate-200 font-bold">New Deployment</strong>.</li>
+                <li>Klik ikon <strong className="text-slate-800 dark:text-slate-200 font-bold">Gerigi</strong> kiri atas, pilih tipe <strong className="text-slate-800 dark:text-slate-200 font-bold">Web App</strong>.</li>
                 <li>
                   Isi konfigurasi berikut:
-                  <div className="text-[10px] text-slate-550 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 bg-slate-100/50 dark:bg-slate-900/60 p-1.5 rounded-md">
                     • Execute as: "Saya (email Anda)"<br />
                     • Who has access: "Siapa saja (Anyone)"
                   </div>
                 </li>
-                <li>Klik <strong className="text-slate-850 dark:text-slate-101">Deploy</strong>, lalu klik <strong className="text-slate-850 dark:text-slate-101">Authorize Access</strong> dan pilih email Google Anda.</li>
-                <li>Klik <strong className="text-slate-455">Advanced</strong> &gt; <strong className="text-slate-850 dark:text-slate-101">Go to Untitled Project (unsafe)</strong> untuk memberikan izin. Klik <strong className="text-slate-850 dark:text-slate-101">Allow/Izinkan</strong>.</li>
+                <li>Klik <strong className="text-slate-800 dark:text-slate-200 font-bold">Deploy</strong>, lalu klik <strong className="text-slate-800 dark:text-slate-200 font-bold">Authorize Access</strong> dan pilih email Google Anda.</li>
+                <li>Klik <strong className="text-slate-600 dark:text-slate-300 font-bold">Advanced</strong> &gt; <strong className="text-slate-800 dark:text-slate-200 font-bold">Go to Untitled Project (unsafe)</strong> untuk memberikan izin. Klik <strong className="text-slate-800 dark:text-slate-200 font-bold">Allow/Izinkan</strong>.</li>
                 <li>Salin <strong className="text-slate-800 dark:text-slate-100">URL Aplikasi Web</strong> yang diberikan (berakhiran <code className="bg-slate-150 dark:bg-slate-900 px-1 py-0.5 rounded text-[10px]">/exec</code>).</li>
                 <li>Kirim tautan tersebut ke HP Anda (lewat WA, email, Telegram, dsb.).</li>
-                <li>Di HP Anda, buka aplikasi ini, paste di kolom atas, lalu pilih <strong className="text-slate-850 dark:text-slate-101">Simpan</strong> dan ketuk <strong className="text-emerald-500 font-bold">Kirim Ke Sheet</strong>!</li>
+                <li>Di HP Anda, buka aplikasi ini, paste di kolom atas, lalu pilih <strong className="text-slate-800 dark:text-slate-200 font-bold">Simpan</strong> dan ketuk <strong className="text-emerald-500 font-bold">Kirim Ke Sheet</strong>!</li>
               </ol>
             </div>
           )}
@@ -469,19 +530,33 @@ function updateSheet(ss, sheetName, dataArray) {
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Ekstra & Pemeliharaan</h3>
         
         <div className="grid grid-cols-2 gap-3">
+          {/* Recalculate balances button */}
+          <button
+            onClick={handleRecalculate}
+            disabled={isRecalculating}
+            className={`col-span-2 p-3 border rounded-xl flex items-center justify-center gap-2 font-bold text-xs cursor-pointer transition-all duration-150 ${
+              recalcSuccess
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-extrabold'
+                : 'bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40 border-emerald-100/60 dark:border-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 text-emerald-500 ${isRecalculating ? 'animate-spin' : ''}`} />
+            <span>{recalcSuccess ? 'Sukses Menghitung Ulang Saldo!' : 'Hitung Ulang Saldo dari Riwayat'}</span>
+          </button>
+
           {/* Backup json file */}
           <button
             onClick={handleBackupData}
-            className="p-3 bg-slate-50 hover:bg-slate-10 border border-slate-150 dark:bg-slate-900 dark:hover:bg-slate-800/80 dark:border-slate-750 text-slate-700 dark:text-slate-200 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm cursor-pointer"
+            className="p-3 bg-slate-50 hover:bg-slate-10 border border-slate-150 dark:bg-slate-900 dark:hover:bg-slate-800/80 dark:border-slate-750 text-slate-700 dark:text-slate-200 rounded-xl flex items-center justify-center gap-2 font-bold text-xs shadow-sm cursor-pointer"
           >
-            <HardDriveUpload className="w-4.5 h-4.5 text-indigo-505 text-emerald-500" />
+            <HardDriveUpload className="w-4.5 h-4.5 text-emerald-500" />
             <span>Backup Data JSON</span>
           </button>
 
           {/* Reset all data to default mock state */}
           <button
             onClick={onResetData}
-            className="p-3 bg-rose-50/60 dark:bg-rose-950/25 border border-rose-100/60 dark:border-rose-950/60 hover:bg-rose-100/50 text-rose-500 dark:text-rose-450 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-xs cursor-pointer"
+            className="p-3 bg-rose-50/60 dark:bg-rose-950/25 border border-rose-100/60 dark:border-rose-950/60 hover:bg-rose-100/50 text-rose-500 dark:text-rose-450 rounded-xl flex items-center justify-center gap-2 font-bold text-xs cursor-pointer"
           >
             <Trash2 className="w-4.5 h-4.5" />
             <span>Reset Data Default</span>

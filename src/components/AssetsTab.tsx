@@ -170,7 +170,8 @@ export default function AssetsTab({
   const handleCreateOrUpdateWallet = (e: React.FormEvent) => {
     e.preventDefault();
     const name = walletName.trim();
-    const balance = parseFloat(walletBalance.replace(/[^0-9-]/g, '')) || 0;
+    // Balance is only set directly when editing, or defaults to 0 when creating
+    const balance = editingWallet ? (parseFloat(walletBalance.replace(/[^0-9-]/g, '')) || 0) : 0;
 
     if (!name) return;
 
@@ -199,7 +200,7 @@ export default function AssetsTab({
       const newWallet: WalletType = {
         id: walletId,
         name,
-        balance,
+        balance: 0, // Starts at 0
         icon: walletIcon,
         color: walletColor,
       };
@@ -208,19 +209,7 @@ export default function AssetsTab({
         wallets: [...state.wallets, newWallet]
       };
 
-      if (balance > 0) {
-        const txObj = {
-          id: `tx_${generateId()}`,
-          type: 'pendapatan' as const,
-          nominal: balance,
-          category: 'Lainnya',
-          date: new Date().toISOString().split('T')[0],
-          source: walletId,
-          notes: `Saldo Awal Dompet ${name}`,
-          timestamp: Date.now(),
-        };
-        updateData.transactions = [txObj, ...state.transactions];
-      }
+      // No initial balance transaction added!
 
       updateState(updateData);
 
@@ -494,9 +483,6 @@ export default function AssetsTab({
                     </div>
                     <div>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{wallet.name}</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
-                        {wallet.id === 'cash' ? 'Tunai / Cash' : wallet.id === 'rekening' ? 'Rekening Bank' : 'E-Wallet'}
-                      </span>
                     </div>
                   </div>
 
@@ -555,44 +541,58 @@ export default function AssetsTab({
                     />
                   </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">Saldo Saat Ini (Rp)</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-100 text-xs font-semibold focus:ring-1 focus:ring-emerald-500 outline-none"
-                      placeholder="Contoh: 1.500.000"
-                      value={walletBalance}
-                      onChange={(e) => {
-                        const numeric = e.target.value.replace(/[^0-9]/g, '');
-                        setWalletBalance(numeric ? parseInt(numeric).toLocaleString('id-ID') : '');
-                      }}
-                      required
-                    />
-                  </div>
+                   {editingWallet ? (
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">Saldo Saat Ini (Rp)</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-100 text-xs font-semibold focus:ring-1 focus:ring-emerald-500 outline-none"
+                        placeholder="Contoh: 1.500.000"
+                        value={walletBalance}
+                        onChange={(e) => {
+                          const numeric = e.target.value.replace(/[^0-9]/g, '');
+                          setWalletBalance(numeric ? parseInt(numeric).toLocaleString('id-ID') : '');
+                        }}
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 p-3 rounded-xl text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                      Tips: Dompet baru akan dibuat dengan saldo awal <span className="text-emerald-600 dark:text-emerald-400 font-bold">Rp 0</span>. Gunakan tombol <span className="text-emerald-600 dark:text-emerald-400 font-bold">"+"</span> di halaman utama untuk mencatat transaksi pendapatan atau transfer saldo ke dompet ini!
+                    </div>
+                  )}
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">Pilih Icon</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Pilih Icon</label>
+                    <div className="grid grid-cols-4 gap-2.5">
                       {[
-                        { name: 'Wallet', label: 'Tunai/Dompet' },
-                        { name: 'CreditCard', label: 'Kartu/Bank' },
-                        { name: 'Smartphone', label: 'E-Wallet' },
-                        { name: 'Coins', label: 'Koin' }
+                        { name: 'Wallet', label: 'Tunai / Dompet' },
+                        { name: 'CreditCard', label: 'Kartu ATM / Rekening' },
+                        { name: 'Smartphone', label: 'E-Wallet / Fintech' },
+                        { name: 'Coins', label: 'Investasi / Koin' }
                       ].map((item) => {
                         const isSelected = walletIcon === item.name;
                         return (
                           <button
                             key={item.name}
                             type="button"
+                            title={item.label}
                             onClick={() => setWalletIcon(item.name)}
-                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition cursor-pointer ${
+                            className={`p-3.5 rounded-xl border flex items-center justify-center transition cursor-pointer ${
                               isSelected
-                                ? 'border-emerald-500 bg-emerald-50/20 text-emerald-500 font-bold'
-                                : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200'
+                                ? 'border-emerald-500 bg-emerald-50/20 text-emerald-500'
+                                : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
                             }`}
                           >
-                            {item.name === 'CreditCard' ? <CreditCard className="w-4 h-4" /> : item.name === 'Smartphone' ? <Smartphone className="w-4 h-4" /> : item.name === 'Coins' ? <Coins className="w-4 h-4" /> : <Wallet className="w-4 h-4" />}
-                            <span className="text-[8px] truncate max-w-full">{item.label}</span>
+                            {item.name === 'CreditCard' ? (
+                              <CreditCard className="w-5 h-5" />
+                            ) : item.name === 'Smartphone' ? (
+                              <Smartphone className="w-5 h-5" />
+                            ) : item.name === 'Coins' ? (
+                              <Coins className="w-5 h-5" />
+                            ) : (
+                              <Wallet className="w-5 h-5" />
+                            )}
                           </button>
                         );
                       })}

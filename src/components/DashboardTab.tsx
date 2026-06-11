@@ -39,11 +39,27 @@ export default function DashboardTab({
   const dfTarget = state.emergencyFund.monthlyExpense * state.emergencyFund.monthTarget;
   const dfPercent = dfTarget > 0 ? Math.round((totalDanaDarurat / dfTarget) * 100) : 0;
 
+  // Helper for translating wallet visual backgrounds based on state color configurations
+  const getWalletBgColorClass = (color: string) => {
+    switch (color) {
+      case 'blue': return 'bg-blue-500';
+      case 'sky': return 'bg-sky-500';
+      case 'orange': return 'bg-orange-500';
+      case 'purple': return 'bg-purple-500';
+      case 'green': return 'bg-green-500';
+      case 'emerald': return 'bg-emerald-500';
+      case 'rose': return 'bg-rose-500';
+      case 'indigo': return 'bg-indigo-500';
+      default: return 'bg-slate-500';
+    }
+  };
+
   // Helper for rendering wallet icons
   const getWalletIcon = (iconName: string) => {
     switch (iconName) {
       case 'CreditCard': return <CreditCard className="w-5 h-5" />;
       case 'Smartphone': return <Smartphone className="w-5 h-5" />;
+      case 'Coins': return <Coins className="w-5 h-5" />;
       default: return <Wallet className="w-5 h-5" />;
     }
   };
@@ -209,11 +225,10 @@ export default function DashboardTab({
               key={wallet.id}
               className="flex-shrink-0 w-36 bg-white dark:bg-slate-800/90 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 snap-center hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2 rounded-xl text-white bg-teal-500 dark:bg-teal-600`}>
+              <div className="flex items-center mb-3">
+                <div className={`p-2 rounded-xl text-white ${getWalletBgColorClass(wallet.color)}`}>
                   {getWalletIcon(wallet.icon)}
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{wallet.name === 'Cash' ? 'Physical' : 'E-Wallet'}</span>
               </div>
               <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mb-1">{wallet.name}</h4>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{formatBalance(wallet.balance)}</p>

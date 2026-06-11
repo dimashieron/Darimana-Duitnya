@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset, TransactionType } from './types';
 import { INITIAL_STATE } from './data';
-import { sanitizeAppState } from './utils';
+import { sanitizeAppState, recalculateBalances } from './utils';
 import BottomNav from './components/BottomNav';
 import DashboardTab from './components/DashboardTab';
 import AssetsTab from './components/AssetsTab';
@@ -26,7 +26,32 @@ export default function App() {
       const stored = localStorage.getItem('finance_tracker_state_v1');
       if (stored) {
         const parsed = JSON.parse(stored);
-        return sanitizeAppState(parsed, INITIAL_STATE);
+        let sanitized = sanitizeAppState(parsed, INITIAL_STATE);
+        
+        // SELF-HEALING: If wallet balances and other asset balances are 0, but they
+        // actually have transaction history, recalculate balances from transactions.
+        const totalWallets = sanitized.wallets.reduce((sum, w) => sum + w.balance, 0);
+        const totalInvestments = sanitized.investments.reduce((sum, inv) => sum + inv.value, 0);
+        const totalSavings = sanitized.savingGoals.reduce((sum, g) => sum + g.balance, 0);
+        const totalEF = sanitized.emergencyFund.balance;
+        
+        if (totalWallets === 0 && totalInvestments === 0 && totalSavings === 0 && totalEF === 0 && sanitized.transactions.length > 0) {
+          const { wallets, investments, savingGoals, emergencyFund } = recalculateBalances(
+            sanitized.transactions,
+            sanitized.wallets,
+            sanitized.investments,
+            sanitized.savingGoals,
+            sanitized.emergencyFund
+          );
+          sanitized = {
+            ...sanitized,
+            wallets,
+            investments,
+            savingGoals,
+            emergencyFund
+          };
+        }
+        return sanitized;
       }
     } catch (e) {
       console.error('Failed to parse local storage, loading default data', e);
@@ -67,6 +92,17 @@ export default function App() {
   const [syncFeedback, setSyncFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const skipAutoSyncRef = React.useRef(true); // skip on initial render mount
+
+  // Custom Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void | Promise<void>;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+  } | null>(null);
 
   // Save changes to localStorage on any state change
   useEffect(() => {
@@ -166,18 +202,26 @@ export default function App() {
 
   // Restores mock values
   const handleResetData = () => {
-    const confirmReset = window.confirm('Apakah Anda yakin ingin menyetel ulang data ke awal? Semua catatan transaksi dan anggaran akan dikosongkan.');
-    if (confirmReset) {
-      skipAutoSyncRef.current = true; // Avoid pushing empty reset state immediately
-      setAppState({
-        ...INITIAL_STATE,
-        gasUrl: appState.gasUrl, // Retain script API endpointURL
-        theme: appState.theme
-      });
-      setActiveTab('home');
-      setSyncFeedback({ type: 'success', message: 'Data berhasil disetel ulang ke pengaturan awal!' });
-      setTimeout(() => setSyncFeedback(null), 3000);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Reset ke Data Default?',
+      description: 'Apakah Anda yakin ingin menyetel ulang data ke awal? Seluruh catatan transaksi dan anggaran saat ini akan dikosongkan dan diganti ke data simulasi bawaan.',
+      confirmText: 'Ya, Reset',
+      cancelText: 'Batal',
+      isDanger: true,
+      onConfirm: () => {
+        skipAutoSyncRef.current = true; // Avoid pushing empty reset state immediately
+        setAppState({
+          ...INITIAL_STATE,
+          gasUrl: appState.gasUrl, // Retain script API endpointURL
+          theme: appState.theme
+        });
+        setActiveTab('home');
+        setSyncFeedback({ type: 'success', message: 'Data berhasil disetel ulang ke pengaturan awal!' });
+        setTimeout(() => setSyncFeedback(null), 3000);
+        setConfirmDialog(null);
+      }
+    });
   };
 
   // Google Apps Script spreadsheets: Push local data to Sheets
@@ -192,11 +236,10 @@ export default function App() {
 
     try {
       // POST the current state metadata to Spreadsheet database
-      await fetch(appState.gasUrl, {
+      const response = await fetch(appState.gasUrl, {
         method: 'POST',
-        mode: 'no-cors', // fire-and-forget, bypasses typical browser sandbox restrictions
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8', // Serves as simple request to bypass CORS preflight blocks, but delivers full JSON payload
         },
         body: JSON.stringify({
           action: 'sync_all',
@@ -209,15 +252,34 @@ export default function App() {
         }),
       });
 
-      setSyncFeedback({ 
-        type: 'success', 
-        message: 'Data HP berhasil dicadangkan ke Google Sheet! Silakan cek spreadsheet Anda.' 
-      });
+      if (response.ok) {
+        const resJson = await response.json().catch(() => null);
+        if (resJson && resJson.status === 'success') {
+          setSyncFeedback({ 
+            type: 'success', 
+            message: 'Data HP berhasil dicadangkan ke Google Sheet! Silakan cek spreadsheet Anda.' 
+          });
+        } else {
+          // Sometimes Google Apps Script redirects and does not return readable body if CORS is semi-blocked by certain configurations,
+          // but if status is 200/OK, usually the script ran successfully. We treat response.ok as success but provide helpful notes.
+          setSyncFeedback({ 
+            type: 'success', 
+            message: 'Sukses mengirim data! Silakan periksa Google Sheet Anda.' 
+          });
+        }
+      } else {
+        setSyncFeedback({ 
+          type: 'error', 
+          message: `Gagal mengirim data. Server rujukan merespon kesalahan (Status: ${response.status}).` 
+        });
+      }
     } catch (error) {
       console.error('Error uploading to Google Sheets:', error);
+      // Fallback: If we got a network/CORS error, since redirects to Googleusercontent from Apps Script sometimes trigger CORS policies on some clients,
+      // the sheet might have actually updated. We give a comprehensive diagnostic message.
       setSyncFeedback({ 
         type: 'error', 
-        message: 'Gagal mengunggah data. Periksa URL Apps Script Anda.' 
+        message: 'Gagal verifikasi respon dari Google Sheets. Pastikan Apps Script di-deploy ulang sebagai Web App dengan akses "Anyone/Siapa Saja".' 
       });
     } finally {
       setUploadLoading(false);
@@ -232,59 +294,74 @@ export default function App() {
       return;
     }
 
-    const confirmPull = window.confirm(
-      'Apakah Anda yakin ingin menarik data dari Google Sheet? Seluruh catatan keuangan di HP saat ini akan ditimpa (overwrite) oleh data dari Google Sheet!'
-    );
-    if (!confirmPull) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Tarik Data dari Sheet?',
+      description: 'Apakah Anda yakin ingin menarik data dari Google Sheet? Seluruh catatan keuangan di HP saat ini akan ditimpa (overwrite) oleh data dari Google Sheet Anda!',
+      confirmText: 'Ya, Tarik Data',
+      cancelText: 'Batal',
+      isDanger: false,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        setDownloadLoading(true);
+        setSyncFeedback(null);
 
-    setDownloadLoading(true);
-    setSyncFeedback(null);
+        try {
+          const getRes = await fetch(appState.gasUrl);
+          if (getRes.ok) {
+            const resJson = await getRes.json();
+            if (resJson.status === 'success' && resJson.data) {
+              const data = resJson.data;
+              
+              // Sanitize received data so we never import corruption (e.g. empty states, undefined or NaN values)
+              const sanitized = sanitizeAppState({
+                transactions: data.transactions,
+                wallets: data.wallets,
+                savingGoals: data.savingGoals,
+                emergencyFund: data.emergencyFund,
+                investments: data.investments,
+                budgets: data.budgets
+              }, INITIAL_STATE);
 
-    try {
-      const getRes = await fetch(appState.gasUrl);
-      if (getRes.ok) {
-        const resJson = await getRes.json();
-        if (resJson.status === 'success' && resJson.data) {
-          const data = resJson.data;
-          
-          // Sanitize received data so we never import corruption (e.g. empty states, undefined or NaN values)
-          const sanitized = sanitizeAppState({
-            transactions: data.transactions,
-            wallets: data.wallets,
-            savingGoals: data.savingGoals,
-            emergencyFund: data.emergencyFund,
-            investments: data.investments,
-            budgets: data.budgets
-          }, INITIAL_STATE);
+              // Recalculate balances dynamically from transaction list to prevent "Net worth 0" bugs
+              const { wallets, investments, savingGoals, emergencyFund } = recalculateBalances(
+                sanitized.transactions,
+                sanitized.wallets,
+                sanitized.investments,
+                sanitized.savingGoals,
+                sanitized.emergencyFund
+              );
 
-          skipAutoSyncRef.current = true; // prevent instantly autosyncing right back what we just pulled
-          setAppState((prev) => ({
-            ...prev,
-            transactions: sanitized.transactions,
-            wallets: sanitized.wallets,
-            savingGoals: sanitized.savingGoals,
-            emergencyFund: sanitized.emergencyFund,
-            investments: sanitized.investments,
-            budgets: sanitized.budgets,
-          }));
+              skipAutoSyncRef.current = true; // prevent instantly autosyncing right back what we just pulled
+              setAppState((prev) => ({
+                ...prev,
+                transactions: sanitized.transactions,
+                wallets,
+                savingGoals,
+                emergencyFund,
+                investments,
+                budgets: sanitized.budgets,
+              }));
 
-          setSyncFeedback({ type: 'success', message: 'Sukses memulihkan data dari Google Sheet ke HP Anda!' });
-        } else {
-          setSyncFeedback({ type: 'error', message: 'Google Sheet kosong atau rincian data tidak valid.' });
+              setSyncFeedback({ type: 'success', message: 'Sukses memulihkan data dari Google Sheet ke HP Anda!' });
+            } else {
+              setSyncFeedback({ type: 'error', message: 'Google Sheet kosong atau rincian data tidak valid.' });
+            }
+          } else {
+            setSyncFeedback({ type: 'error', message: 'Mendapat respon tidak valid dari Apps Script (Bukan OK).' });
+          }
+        } catch (error) {
+          console.error('Error synchronizing Google Sheets download:', error);
+          setSyncFeedback({ 
+            type: 'error', 
+            message: 'Gagal mengunduh data. Pastikan Apps Script di-deploy dan dapat diakses publik.' 
+          });
+        } finally {
+          setDownloadLoading(false);
+          setTimeout(() => setSyncFeedback(null), 5000);
         }
-      } else {
-        setSyncFeedback({ type: 'error', message: 'Mendapat respon tidak valid dari Apps Script (Bukan OK).' });
       }
-    } catch (error) {
-      console.error('Error synchronizing Google Sheets download:', error);
-      setSyncFeedback({ 
-        type: 'error', 
-        message: 'Gagal mengunduh data. Pastikan Apps Script di-deploy dan dapat diakses publik.' 
-      });
-    } finally {
-      setDownloadLoading(false);
-      setTimeout(() => setSyncFeedback(null), 5000);
-    }
+    });
   };
 
   // Prepopulate form triggers
@@ -425,6 +502,49 @@ export default function App() {
             prepopulatedParams={prepopulatedParams}
             showToast={showToast}
           />
+        )}
+
+        {/* Beautiful Custom Native Confirmation Dialog Modal */}
+        {confirmDialog && confirmDialog.isOpen && (
+          <div className="absolute inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center p-6 md:rounded-[36px] animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 w-full max-w-[290px] shadow-2xl space-y-4 text-center transform scale-100 transition-all">
+              <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${confirmDialog.isDanger ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-500' : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500'}`}>
+                {confirmDialog.isDanger ? (
+                  <AlertCircle className="w-6 h-6 stroke-[2.2]" />
+                ) : (
+                  <RefreshCw className="w-5 h-5 stroke-[2.2]" />
+                )}
+              </div>
+              
+              <div className="space-y-1.5">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {confirmDialog.title}
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                  {confirmDialog.description}
+                </p>
+              </div>
+
+              <div className="flex gap-2.5 pt-1.5 font-sans">
+                <button
+                  onClick={() => setConfirmDialog(null)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-2xl cursor-pointer transition-all active:scale-[0.97]"
+                >
+                  {confirmDialog.cancelText || 'Batal'}
+                </button>
+                <button
+                  onClick={confirmDialog.onConfirm}
+                  className={`flex-1 py-2.5 text-white text-xs font-bold rounded-2xl cursor-pointer transition-all active:scale-[0.97] shadow-sm ${
+                    confirmDialog.isDanger 
+                      ? 'bg-rose-500 hover:bg-rose-600' 
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                >
+                  {confirmDialog.confirmText || 'Ya'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Navigation bottom deck */}
