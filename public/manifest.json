@@ -1,0 +1,37 @@
+{
+  "short_name": "Darimana Duitnya",
+  "name": "Darimana Duitnya - Pencatat Keuangan Pribadi",
+  "description": "Aplikasi pencatat keuangan praktis, aman, tanpa iklan dengan integrasi otomatis Google Sheets.",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["finance", "utilities"]
+}

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { 
   Moon, Sun, Laptop, Database, RefreshCw, 
   Trash2, HardDriveUpload, CheckCircle, AlertCircle, Check,
-  BookOpen, HelpCircle, ChevronDown, ChevronUp, Copy
+  BookOpen, HelpCircle, ChevronDown, ChevronUp, Copy, Smartphone
 } from 'lucide-react';
 import { AppState, Wallet } from '../types';
 import { recalculateBalances } from '../utils';
@@ -329,7 +329,7 @@ function updateSheet(ss, sheetName, dataArray) {
         {/* Sync Trigger Action if URL exists */}
         {state.gasUrl ? (
           <div className="space-y-3.5 font-sans">
-            <div className="bg-emerald-50/55 dark:bg-emerald-955/20 border border-emerald-100/50 dark:border-emerald-900/40 p-4 rounded-2xl space-y-3.5">
+            <div className="bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/40 p-4 rounded-2xl space-y-3.5">
               <div className="flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-400 font-bold">
                 <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                 <span>Koneksi Google Spreadsheet Aktif!</span>
@@ -357,9 +357,9 @@ function updateSheet(ss, sheetName, dataArray) {
                 </button>
               </div>
               
-              <div className="text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-2.5 space-y-1 select-none">
+              <div className="text-[10px] text-slate-500 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-2.5 space-y-1 select-none">
                 <p>• <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Kirim Ke Sheet (Upload):</span> Menyimpan seluruh catatan harian, saldo dompet, dan target tabungan Anda dari HP ini langsung ke Google Sheet.</p>
-                <p>• <span className="font-extrabold text-indigo-500">Tarik Ke HP (Download):</span> Memulihkan seluruh data riwayat transaksi Anda dari Google Sheet untuk di-import kembali ke HP ini.</p>
+                <p>• <span className="font-extrabold text-indigo-600 dark:text-indigo-400">Tarik Ke HP (Download):</span> Memulihkan seluruh data riwayat transaksi Anda dari Google Sheet untuk di-import kembali ke HP ini.</p>
               </div>
             </div>
 
@@ -522,6 +522,60 @@ function updateSheet(ss, sheetName, dataArray) {
               </ol>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* PWA Installation Card */}
+      <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/85 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 rounded-xl">
+            <Smartphone className="w-6 h-6 stroke-[2.2]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              Instal Aplikasi di HP (Bebas Biaya)
+              <span className="inline-flex text-[9px] bg-emerald-500 font-extrabold text-white px-1.5 py-0.5 rounded-md">PWA</span>
+            </h3>
+            <p className="text-[10px] text-slate-400 font-sans mt-0.5">Pasang aplikasi pencatat keuangan ini di layar HP Anda langsung</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-xl text-xs space-y-3 font-sans leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-300 text-[11px]">
+            Aplikasi ini mendukung teknologi <strong className="text-emerald-500">Progressive Web App (PWA)</strong>, yang memungkinkan Anda untuk memasang aplikasi di ponsel pintar Android maupun iOS secara <strong>100% gratis</strong> tanpa perlu akun App Store atau Google Play Store yang berbayar dan rumit!
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {/* iOS Guide */}
+            <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-150/50 dark:border-slate-750 space-y-2">
+              <span className="font-bold text-emerald-500 text-xs flex items-center gap-1.5">
+                🍏 Pasang di iPhone / iPad (iOS)
+              </span>
+              <ol className="list-decimal pl-4.5 space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <li>Buka tautan website aplikasi ini di browser <strong className="text-slate-800 dark:text-slate-200">Safari</strong> bawaan HP Anda.</li>
+                <li>Ketuk tombol <strong className="text-slate-800 dark:text-slate-200">Bagikan (Share)</strong> di bar menu bawah (ikon kotak dengan panah ke atas).</li>
+                <li>Gulir ke bawah dan pilih opsi <strong className="text-slate-800 dark:text-slate-200 font-bold">"Add to Home Screen" (Tambah ke Layar Utama)</strong>.</li>
+                <li>Ketuk <strong className="text-emerald-500 font-bold">Add (Tambah)</strong> di sudut kanan atas. Selesai!</li>
+              </ol>
+            </div>
+
+            {/* Android Guide */}
+            <div className="p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-150/50 dark:border-slate-750 space-y-2">
+              <span className="font-bold text-emerald-500 text-xs flex items-center gap-1.5">
+                🤖 Pasang di Android (Samsung, Xiaomi, dll)
+              </span>
+              <ol className="list-decimal pl-4.5 space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <li>Buka tautan website aplikasi ini di browser <strong className="text-slate-800 dark:text-slate-200 font-bold">Google Chrome</strong> Anda.</li>
+                <li>Ketuk tombol menu <strong className="text-slate-800 dark:text-slate-200 font-bold">titik tiga (⋮)</strong> di kanan atas browser Chrome.</li>
+                <li>Pilih opsi <strong className="text-slate-800 dark:text-slate-200 font-bold">"Install App" (Instal Aplikasi)</strong> atau <strong className="text-slate-800 dark:text-slate-200 font-bold">"Tambah ke Layar Utama"</strong>.</li>
+                <li>Ketuk tombol <strong className="text-emerald-500 font-bold">Install</strong> untuk menyetujui. Selesai!</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50/40 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100/50 dark:border-emerald-950/40 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+            💡 <strong>Keuntungan PWA:</strong> Setelah dipasang di HP, aplikasi dapat diakses secara layar penuh tanpa bar pencarian browser (terasa seperti aplikasi HP native), memuat lebih cepat berkat caching offline pihak ke-3, menjaga privasi data Anda 100% aman di perangkat sendiri, serta sepenuhnya bebas biaya selamanya!
+          </div>
         </div>
       </div>
 
