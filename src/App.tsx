@@ -5,8 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Database, RefreshCw, AlertCircle, X, Check,
-  Sliders, Smartphone, Settings, ArrowLeft
+  RefreshCw, AlertCircle, Check, ArrowLeft
 } from 'lucide-react';
 import { AppState, Transaction, Wallet, SavingGoal, EmergencyFund, InvestmentAsset, TransactionType } from './types';
 import { INITIAL_STATE } from './data';
@@ -86,13 +85,6 @@ export default function App() {
     destination?: string;
   } | null>(null);
 
-  // Syncing states
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [autoSyncing, setAutoSyncing] = useState(false);
-  const skipAutoSyncRef = React.useRef(true); // skip on initial render mount
-
   // Custom Confirmation Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -108,64 +100,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('finance_tracker_state_v1', JSON.stringify(appState));
   }, [appState]);
-
-  // Autosync on data changes to remote Google Sheet database
-  useEffect(() => {
-    if (skipAutoSyncRef.current) {
-      skipAutoSyncRef.current = false;
-      return;
-    }
-
-    if (!appState.gasUrl || appState.autoSync === false) {
-      return;
-    }
-
-    // SAFEGUARD: Jangan biarkan autosync otomatis mengunggah data kosong ke Google Sheets.
-    // Jika data transaksi di HP kosong, jangan lakukan autosync. Ini mencegah
-    // HP baru / Shortcut baru yang masih kosong menimpa atau menghapus isi spreadsheet Anda!
-    if (appState.transactions.length === 0) {
-      return;
-    }
-
-    // Debounce the auto sync by 1.5 seconds so we don't trigger multiple requests in quick succession
-    const debounceTimer = setTimeout(async () => {
-      setAutoSyncing(true);
-      try {
-        await fetch(appState.gasUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'sync_all',
-            transactions: appState.transactions,
-            wallets: appState.wallets,
-            savingGoals: appState.savingGoals,
-            emergencyFund: appState.emergencyFund,
-            investments: appState.investments,
-            budgets: appState.budgets,
-          }),
-        });
-        console.log('Automated sync to spreadsheet completed');
-      } catch (err) {
-        console.error('Automated sync failed:', err);
-      } finally {
-        setAutoSyncing(false);
-      }
-    }, 1500);
-
-    return () => clearTimeout(debounceTimer);
-  }, [
-    appState.transactions,
-    appState.wallets,
-    appState.savingGoals,
-    appState.emergencyFund,
-    appState.investments,
-    appState.budgets,
-    appState.gasUrl,
-    appState.autoSync
-  ]);
 
   // Theme Controller
   useEffect(() => {
@@ -210,156 +144,13 @@ export default function App() {
       cancelText: 'Batal',
       isDanger: true,
       onConfirm: () => {
-        skipAutoSyncRef.current = true; // Avoid pushing empty reset state immediately
         setAppState({
           ...INITIAL_STATE,
-          gasUrl: appState.gasUrl, // Retain script API endpointURL
           theme: appState.theme
         });
         setActiveTab('home');
-        setSyncFeedback({ type: 'success', message: 'Data berhasil disetel ulang ke pengaturan awal!' });
-        setTimeout(() => setSyncFeedback(null), 3000);
+        showToast('Data berhasil disetel ulang ke pengaturan awal!', 'success');
         setConfirmDialog(null);
-      }
-    });
-  };
-
-  // Google Apps Script spreadsheets: Push local data to Sheets
-  const handleUploadToSpreadsheet = async () => {
-    if (!appState.gasUrl) {
-      setSyncFeedback({ type: 'error', message: 'Tolong tautkan link URL Apps Script valid di tab Pengaturan.' });
-      return;
-    }
-
-    setUploadLoading(true);
-    setSyncFeedback(null);
-
-    try {
-      // POST the current state metadata to Spreadsheet database
-      const response = await fetch(appState.gasUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8', // Serves as simple request to bypass CORS preflight blocks, but delivers full JSON payload
-        },
-        body: JSON.stringify({
-          action: 'sync_all',
-          transactions: appState.transactions,
-          wallets: appState.wallets,
-          savingGoals: appState.savingGoals,
-          emergencyFund: appState.emergencyFund,
-          investments: appState.investments,
-          budgets: appState.budgets,
-        }),
-      });
-
-      if (response.ok) {
-        const resJson = await response.json().catch(() => null);
-        if (resJson && resJson.status === 'success') {
-          setSyncFeedback({ 
-            type: 'success', 
-            message: 'Data HP berhasil dicadangkan ke Google Sheet! Silakan cek spreadsheet Anda.' 
-          });
-        } else {
-          // Sometimes Google Apps Script redirects and does not return readable body if CORS is semi-blocked by certain configurations,
-          // but if status is 200/OK, usually the script ran successfully. We treat response.ok as success but provide helpful notes.
-          setSyncFeedback({ 
-            type: 'success', 
-            message: 'Sukses mengirim data! Silakan periksa Google Sheet Anda.' 
-          });
-        }
-      } else {
-        setSyncFeedback({ 
-          type: 'error', 
-          message: `Gagal mengirim data. Server rujukan merespon kesalahan (Status: ${response.status}).` 
-        });
-      }
-    } catch (error) {
-      console.error('Error uploading to Google Sheets:', error);
-      // Fallback: If we got a network/CORS error, since redirects to Googleusercontent from Apps Script sometimes trigger CORS policies on some clients,
-      // the sheet might have actually updated. We give a comprehensive diagnostic message.
-      setSyncFeedback({ 
-        type: 'error', 
-        message: 'Gagal verifikasi respon dari Google Sheets. Pastikan Apps Script di-deploy ulang sebagai Web App dengan akses "Anyone/Siapa Saja".' 
-      });
-    } finally {
-      setUploadLoading(false);
-      setTimeout(() => setSyncFeedback(null), 5000);
-    }
-  };
-
-  // Google Apps Script spreadsheets: Pull Sheets data to Local HP
-  const handleDownloadFromSpreadsheet = async () => {
-    if (!appState.gasUrl) {
-      setSyncFeedback({ type: 'error', message: 'Tolong tautkan link URL Apps Script valid di tab Pengaturan.' });
-      return;
-    }
-
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Tarik Data dari Sheet?',
-      description: 'Apakah Anda yakin ingin menarik data dari Google Sheet? Seluruh catatan keuangan di HP saat ini akan ditimpa (overwrite) oleh data dari Google Sheet Anda!',
-      confirmText: 'Ya, Tarik Data',
-      cancelText: 'Batal',
-      isDanger: false,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        setDownloadLoading(true);
-        setSyncFeedback(null);
-
-        try {
-          const getRes = await fetch(appState.gasUrl);
-          if (getRes.ok) {
-            const resJson = await getRes.json();
-            if (resJson.status === 'success' && resJson.data) {
-              const data = resJson.data;
-              
-              // Sanitize received data so we never import corruption (e.g. empty states, undefined or NaN values)
-              const sanitized = sanitizeAppState({
-                transactions: data.transactions,
-                wallets: data.wallets,
-                savingGoals: data.savingGoals,
-                emergencyFund: data.emergencyFund,
-                investments: data.investments,
-                budgets: data.budgets
-              }, INITIAL_STATE);
-
-              // Recalculate balances dynamically from transaction list to prevent "Net worth 0" bugs
-              const { wallets, investments, savingGoals, emergencyFund } = recalculateBalances(
-                sanitized.transactions,
-                sanitized.wallets,
-                sanitized.investments,
-                sanitized.savingGoals,
-                sanitized.emergencyFund
-              );
-
-              skipAutoSyncRef.current = true; // prevent instantly autosyncing right back what we just pulled
-              setAppState((prev) => ({
-                ...prev,
-                transactions: sanitized.transactions,
-                wallets,
-                savingGoals,
-                emergencyFund,
-                investments,
-                budgets: sanitized.budgets,
-              }));
-
-              setSyncFeedback({ type: 'success', message: 'Sukses memulihkan data dari Google Sheet ke HP Anda!' });
-            } else {
-              setSyncFeedback({ type: 'error', message: 'Google Sheet kosong atau rincian data tidak valid.' });
-            }
-          } else {
-            setSyncFeedback({ type: 'error', message: 'Mendapat respon tidak valid dari Apps Script (Bukan OK).' });
-          }
-        } catch (error) {
-          console.error('Error synchronizing Google Sheets download:', error);
-          setSyncFeedback({ 
-            type: 'error', 
-            message: 'Gagal mengunduh data. Pastikan Apps Script di-deploy dan dapat diakses publik.' 
-          });
-        } finally {
-          setDownloadLoading(false);
-          setTimeout(() => setSyncFeedback(null), 5000);
-        }
       }
     });
   };
@@ -390,14 +181,6 @@ export default function App() {
       {/* Sleek App Shell box responsive on desktop, native layout on mobile */}
       <div className={`w-full max-w-md md:rounded-[36px] md:shadow-2xl md:ring-1 ${isDarkTheme ? 'dark md:ring-slate-800 bg-slate-950' : 'md:ring-slate-200 bg-slate-50'} md:relative md:overflow-hidden min-h-screen md:min-h-[820px] flex flex-col transition-colors`}>
         
-        {/* Minimalist Floating Auto-Sync status indicator inside the shell */}
-        {autoSyncing && (
-          <div className="absolute top-4 right-4 z-40 bg-emerald-500/95 dark:bg-emerald-500/90 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse select-none pointer-events-none transition-all">
-            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-            <span>Autosync...</span>
-          </div>
-        )}
-
         {/* Tab Header breadcrumb bar (Only show if settings or nested views are loaded) */}
         {activeTab === 'settings' && (
           <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-900 flex items-center gap-2 bg-white dark:bg-slate-900/45 animate-fade-in">
@@ -454,31 +237,9 @@ export default function App() {
               state={appState} 
               updateState={updateState} 
               onResetData={handleResetData}
-              onUploadToSpreadsheet={handleUploadToSpreadsheet}
-              onDownloadFromSpreadsheet={handleDownloadFromSpreadsheet}
-              uploadLoading={uploadLoading}
-              downloadLoading={downloadLoading}
-              autoSyncing={autoSyncing}
             />
           )}
         </main>
-
-        {/* Spreadsheet Sync Status Feedback popover */}
-        {syncFeedback && (
-          <div className={`fixed top-12 left-1/2 -translate-x-1/2 md:absolute max-w-xs w-[90%] p-3.5 rounded-xl shadow-xl border z-50 flex items-start gap-2.5 animate-fade-in font-sans text-xs font-bold leading-normal ${
-            syncFeedback.type === 'success' 
-              ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-250 text-emerald-850 dark:text-emerald-400' 
-              : 'bg-rose-50 dark:bg-rose-955 border-rose-200 text-rose-800'
-          }`}>
-            {syncFeedback.type === 'success' ? <ShieldCheck className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />}
-            <div className="flex-1">
-              <span>{syncFeedback.message}</span>
-            </div>
-            <button onClick={() => setSyncFeedback(null)} className="text-slate-400 font-normal">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
 
         {/* Global Toast Notification */}
         {toast && (
