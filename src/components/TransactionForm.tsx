@@ -464,6 +464,7 @@ export default function TransactionForm({
               >
                 <option value="pengeluaran" className="dark:bg-slate-900 dark:text-slate-200">Pengeluaran 📉</option>
                 <option value="pendapatan" className="dark:bg-slate-900 dark:text-slate-200">Pendapatan 📈</option>
+                <option value="transfer" className="dark:bg-slate-900 dark:text-slate-200">Transfer Saldo 🔄</option>
                 <option value="tabungan" className="dark:bg-slate-900 dark:text-slate-200">Tabungan 💰</option>
                 <option value="dana_darurat" className="dark:bg-slate-900 dark:text-slate-200">Dana Darurat 🚨</option>
                 <option value="investasi" className="dark:bg-slate-900 dark:text-slate-200">Investasi 🚀</option>
