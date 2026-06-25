@@ -76,7 +76,7 @@ export default function App() {
 
   // UI routing states
   const [activeTab, setActiveTab] = useState<'home' | 'assets' | 'report' | 'history' | 'settings'>('home');
-  const [assetsActiveSubTab, setAssetsActiveSubTab] = useState<'wallets' | 'portfolio' | 'savings' | 'emergency' | 'budget'>('wallets');
+  const [assetsActiveSubTab, setAssetsActiveSubTab] = useState<'wallets' | 'portfolio' | 'savings' | 'emergency' | 'budget'>('emergency');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [prepopulatedParams, setPrepopulatedParams] = useState<{

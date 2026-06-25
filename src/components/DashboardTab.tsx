@@ -191,11 +191,25 @@ export default function DashboardTab({
           </button>
         </div>
 
-        <h1 className="text-3xl font-bold font-sans tracking-tight mb-6 relative z-10">
-          {formatBalance(netWorth)}
-        </h1>
+        <div className="flex items-end justify-between mb-6 relative z-10">
+          <h1 className="text-3xl font-bold font-sans tracking-tight">
+            {formatBalance(netWorth)}
+          </h1>
+          <div className="flex flex-col items-end text-right">
+            <span className="text-[10px] text-white/80 uppercase font-bold tracking-wider">Dana Darurat</span>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[11px] font-bold bg-white/20 px-1.5 py-0.5 rounded-lg">{dfPercent}%</span>
+              <div className="w-14 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="bg-white h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${Math.min(dfPercent, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <div className="border-t border-white/20 pt-4 grid grid-cols-3 gap-2 relative z-10 font-sans">
+        <div className="border-t border-white/20 pt-4 grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10 font-sans">
           <div>
             <span className="text-[10px] opacity-75 block">Dompet</span>
             <span className="text-xs font-semibold block mt-0.5 truncate">{formatBalance(totalDompet)}</span>
@@ -207,6 +221,10 @@ export default function DashboardTab({
           <div>
             <span className="text-[10px] opacity-75 block">Tabungan</span>
             <span className="text-xs font-semibold block mt-0.5 truncate">{formatBalance(totalTabungan)}</span>
+          </div>
+          <div>
+            <span className="text-[10px] opacity-75 block">Dana Darurat</span>
+            <span className="text-xs font-semibold block mt-0.5 truncate">{formatBalance(totalDanaDarurat)}</span>
           </div>
         </div>
       </div>
