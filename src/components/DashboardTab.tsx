@@ -8,8 +8,8 @@ import {
   Eye, EyeOff, Bell, Settings, ArrowRight, Wallet, 
   CreditCard, Smartphone, ShieldCheck, TrendingUp, PiggyBank,
   Utensils, Car, Receipt, ShoppingBag, HeartPulse, Briefcase, 
-  Gift, Gamepad2, HelpCircle, Coins,
-  Laptop, Sparkles, Store, Award
+  Gift, Gamepad2, HelpCircle, Coins, Heart,
+  Laptop, Sparkles, Store, Award, GraduationCap
 } from 'lucide-react';
 import { AppState, Transaction, Wallet as WalletType } from '../types';
 import { formatRupiah, formatReadableDate } from '../utils';
@@ -81,6 +81,10 @@ export default function DashboardTab({
       case 'Hibah / Hadiah': return <Award className="w-4 h-4 text-rose-500" />;
       case 'Investasi': return <TrendingUp className="w-4 h-4 text-teal-500" />;
       case 'Hiburan': return <Gamepad2 className="w-4 h-4 text-purple-500" />;
+      case 'Sedekah': return <Heart className="w-4 h-4 text-rose-500" />;
+      case 'Pendidikan': return <GraduationCap className="w-4 h-4 text-sky-500" />;
+      case 'Cicilan': return <CreditCard className="w-4 h-4 text-indigo-500" />;
+      case 'Hutang': return <Coins className="w-4 h-4 text-amber-500" />;
       default: return <HelpCircle className="w-4 h-4 text-slate-500" />;
     }
   };
@@ -100,6 +104,10 @@ export default function DashboardTab({
       case 'Hibah / Hadiah': return 'bg-rose-50 dark:bg-rose-950/40 text-rose-500';
       case 'Investasi': return 'bg-teal-50 dark:bg-teal-950/40 text-teal-500';
       case 'Hiburan': return 'bg-purple-50 dark:bg-purple-950/40 text-purple-500';
+      case 'Sedekah': return 'bg-rose-50 dark:bg-rose-950/40 text-rose-500';
+      case 'Pendidikan': return 'bg-sky-50 dark:bg-sky-950/40 text-sky-500';
+      case 'Cicilan': return 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500';
+      case 'Hutang': return 'bg-amber-50 dark:bg-amber-950/40 text-amber-500';
       default: return 'bg-slate-50 dark:bg-slate-800 text-slate-500';
     }
   };
@@ -191,23 +199,9 @@ export default function DashboardTab({
           </button>
         </div>
 
-        <div className="flex items-end justify-between mb-6 relative z-10">
-          <h1 className="text-3xl font-bold font-sans tracking-tight">
-            {formatBalance(netWorth)}
-          </h1>
-          <div className="flex flex-col items-end text-right">
-            <span className="text-[10px] text-white/80 uppercase font-bold tracking-wider">Dana Darurat</span>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-[11px] font-bold bg-white/20 px-1.5 py-0.5 rounded-lg">{dfPercent}%</span>
-              <div className="w-14 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                <div 
-                  className="bg-white h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(dfPercent, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold font-sans tracking-tight mb-6 relative z-10">
+          {formatBalance(netWorth)}
+        </h1>
 
         <div className="border-t border-white/20 pt-4 grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10 font-sans">
           <div>

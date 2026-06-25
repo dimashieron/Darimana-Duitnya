@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Check, Wallet, Landmark, Smartphone, Coins, ArrowRight,
   TrendingUp, Calendar, FileText, Upload, ChevronDown, CheckCircle2,
-  Utensils, Car, Receipt, ShoppingBag, HeartPulse, Briefcase, Gift, Gamepad2, HelpCircle,
-  Laptop, Sparkles, Store, Award
+  Utensils, Car, Receipt, ShoppingBag, HeartPulse, Briefcase, Gift, Gamepad2, HelpCircle, Heart,
+  Laptop, Sparkles, Store, Award, GraduationCap, CreditCard
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType, Wallet as WalletType, SavingGoal, InvestmentAsset, AppCategory } from '../types';
 import { formatRupiah, generateId, formatYYYYMMDDToDDMMYY, getLocalYYYYMMDD } from '../utils';
@@ -397,6 +397,10 @@ export default function TransactionForm({
       case 'Hibah / Hadiah': return <Award className="w-5 h-5 text-rose-500" />;
       case 'Investasi': return <TrendingUp className="w-5 h-5 text-teal-500" />;
       case 'Hiburan': return <Gamepad2 className="w-5 h-5 text-purple-500" />;
+      case 'Sedekah': return <Heart className="w-5 h-5 text-rose-500" />;
+      case 'Pendidikan': return <GraduationCap className="w-5 h-5 text-sky-500" />;
+      case 'Cicilan': return <CreditCard className="w-5 h-5 text-indigo-500" />;
+      case 'Hutang': return <Coins className="w-5 h-5 text-amber-500" />;
       default: return <HelpCircle className={`w-5 h-5 ${textColor}`} />;
     }
   };

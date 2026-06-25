@@ -446,12 +446,22 @@ export default function ReportTab({ state, updateState, showToast }: ReportTabPr
                name === 'Transportasi' ? 'bg-blue-500' :
                name === 'Tagihan' ? 'bg-indigo-500' :
                name === 'Belanja' ? 'bg-pink-500' :
-               name === 'Kesehatan' ? 'bg-emerald-500' : 'bg-slate-400',
+               name === 'Kesehatan' ? 'bg-emerald-500' :
+               name === 'Hiburan' ? 'bg-purple-500' :
+               name === 'Sedekah' ? 'bg-rose-500' :
+               name === 'Pendidikan' ? 'bg-sky-500' :
+               name === 'Cicilan' ? 'bg-violet-500' :
+               name === 'Hutang' ? 'bg-amber-500' : 'bg-slate-400',
         stroke: name === 'Makanan' ? '#ef4444' :
                 name === 'Transportasi' ? '#3b82f6' :
                 name === 'Tagihan' ? '#6366f1' :
                 name === 'Belanja' ? '#ec4899' :
-                name === 'Kesehatan' ? '#10b981' : '#94a3b8'
+                name === 'Kesehatan' ? '#10b981' :
+                name === 'Hiburan' ? '#a855f7' :
+                name === 'Sedekah' ? '#f43f5e' :
+                name === 'Pendidikan' ? '#0ea5e9' :
+                name === 'Cicilan' ? '#8b5cf6' :
+                name === 'Hutang' ? '#f59e0b' : '#94a3b8'
       };
     });
     

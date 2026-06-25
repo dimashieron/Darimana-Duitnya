@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { 
   Search, Calendar, MoreVertical, Pencil, Trash2, 
   X, Check, Utensils, Car, Receipt, ShoppingBag, HeartPulse, 
-  Briefcase, Gift, Gamepad2, HelpCircle, TrendingUp, Info,
-  Laptop, Sparkles, Store, Award
+  Briefcase, Gift, Gamepad2, HelpCircle, TrendingUp, Info, Heart,
+  Laptop, Sparkles, Store, Award, GraduationCap, CreditCard, Coins
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType } from '../types';
 import { formatRupiah, formatReadableDate, getLocalYYYYMMDD, getLocalNDaysAgoYYYYMMDD } from '../utils';
@@ -61,6 +61,10 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
       case 'Hibah / Hadiah': return <Award className="w-5 h-5 text-rose-500" />;
       case 'Investasi': return <TrendingUp className="w-5 h-5 text-teal-500" />;
       case 'Hiburan': return <Gamepad2 className="w-5 h-5 text-purple-500" />;
+      case 'Sedekah': return <Heart className="w-5 h-5 text-rose-500" />;
+      case 'Pendidikan': return <GraduationCap className="w-5 h-5 text-sky-500" />;
+      case 'Cicilan': return <CreditCard className="w-5 h-5 text-indigo-500" />;
+      case 'Hutang': return <Coins className="w-5 h-5 text-amber-500" />;
       default: return <HelpCircle className="w-5 h-5 text-slate-500" />;
     }
   };
@@ -80,6 +84,10 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
       case 'Hibah / Hadiah': return 'bg-rose-50 dark:bg-rose-950/40';
       case 'Investasi': return 'bg-teal-50 dark:bg-teal-950/40';
       case 'Hiburan': return 'bg-purple-50 dark:bg-purple-950/40';
+      case 'Sedekah': return 'bg-rose-50 dark:bg-rose-950/40';
+      case 'Pendidikan': return 'bg-sky-50 dark:bg-sky-950/40';
+      case 'Cicilan': return 'bg-indigo-50 dark:bg-indigo-950/40';
+      case 'Hutang': return 'bg-amber-50 dark:bg-amber-950/40';
       default: return 'bg-slate-50 dark:bg-slate-800';
     }
   };
