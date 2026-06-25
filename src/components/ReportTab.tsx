@@ -482,9 +482,17 @@ export default function ReportTab({ state, updateState, showToast }: ReportTabPr
         name,
         pct,
         color: name === 'Gaji' ? 'bg-emerald-500' :
-               name === 'Bonus' ? 'bg-amber-400' : 'bg-slate-400',
+               name === 'Bonus' ? 'bg-amber-400' :
+               name === 'Freelance' ? 'bg-cyan-500' :
+               name === 'Side Hustle' ? 'bg-purple-500' :
+               name === 'Dagang' ? 'bg-teal-500' :
+               name === 'Hibah / Hadiah' ? 'bg-rose-500' : 'bg-slate-400',
         stroke: name === 'Gaji' ? '#10b981' :
-                name === 'Bonus' ? '#fbbf24' : '#94a3b8'
+                name === 'Bonus' ? '#fbbf24' :
+                name === 'Freelance' ? '#06b6d4' :
+                name === 'Side Hustle' ? '#a855f7' :
+                name === 'Dagang' ? '#14b8a6' :
+                name === 'Hibah / Hadiah' ? '#f43f5e' : '#94a3b8'
       };
     });
     

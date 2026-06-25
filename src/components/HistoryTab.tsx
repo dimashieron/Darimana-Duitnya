@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 import { 
   Search, Calendar, MoreVertical, Pencil, Trash2, 
   X, Check, Utensils, Car, Receipt, ShoppingBag, HeartPulse, 
-  Briefcase, Gift, Gamepad2, HelpCircle, TrendingUp, Info 
+  Briefcase, Gift, Gamepad2, HelpCircle, TrendingUp, Info,
+  Laptop, Sparkles, Store, Award
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType } from '../types';
 import { formatRupiah, formatReadableDate, getLocalYYYYMMDD, getLocalNDaysAgoYYYYMMDD } from '../utils';
@@ -54,6 +55,10 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
       case 'Kesehatan': return <HeartPulse className="w-5 h-5 text-emerald-500" />;
       case 'Gaji': return <Briefcase className="w-5 h-5 text-green-500" />;
       case 'Bonus': return <Gift className="w-5 h-5 text-amber-500" />;
+      case 'Freelance': return <Laptop className="w-5 h-5 text-cyan-500" />;
+      case 'Side Hustle': return <Sparkles className="w-5 h-5 text-purple-500" />;
+      case 'Dagang': return <Store className="w-5 h-5 text-emerald-500" />;
+      case 'Hibah / Hadiah': return <Award className="w-5 h-5 text-rose-500" />;
       case 'Investasi': return <TrendingUp className="w-5 h-5 text-teal-500" />;
       case 'Hiburan': return <Gamepad2 className="w-5 h-5 text-purple-500" />;
       default: return <HelpCircle className="w-5 h-5 text-slate-500" />;
@@ -69,6 +74,10 @@ export default function HistoryTab({ state, updateState, onEditTransaction, show
       case 'Kesehatan': return 'bg-emerald-50 dark:bg-emerald-950/40';
       case 'Gaji': return 'bg-green-50 dark:bg-green-950/40';
       case 'Bonus': return 'bg-amber-50 dark:bg-amber-950/40';
+      case 'Freelance': return 'bg-cyan-50 dark:bg-cyan-950/40';
+      case 'Side Hustle': return 'bg-purple-50 dark:bg-purple-950/40';
+      case 'Dagang': return 'bg-emerald-50 dark:bg-emerald-950/40';
+      case 'Hibah / Hadiah': return 'bg-rose-50 dark:bg-rose-950/40';
       case 'Investasi': return 'bg-teal-50 dark:bg-teal-950/40';
       case 'Hiburan': return 'bg-purple-50 dark:bg-purple-950/40';
       default: return 'bg-slate-50 dark:bg-slate-800';

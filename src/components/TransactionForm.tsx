@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Check, Wallet, Landmark, Smartphone, Coins, ArrowRight,
   TrendingUp, Calendar, FileText, Upload, ChevronDown, CheckCircle2,
-  Utensils, Car, Receipt, ShoppingBag, HeartPulse, Briefcase, Gift, Gamepad2, HelpCircle
+  Utensils, Car, Receipt, ShoppingBag, HeartPulse, Briefcase, Gift, Gamepad2, HelpCircle,
+  Laptop, Sparkles, Store, Award
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType, Wallet as WalletType, SavingGoal, InvestmentAsset, AppCategory } from '../types';
 import { formatRupiah, generateId, formatYYYYMMDDToDDMMYY, getLocalYYYYMMDD } from '../utils';
@@ -390,6 +391,10 @@ export default function TransactionForm({
       case 'Kesehatan': return <HeartPulse className="w-5 h-5 text-emerald-500" />;
       case 'Gaji': return <Briefcase className="w-5 h-5 text-green-500" />;
       case 'Bonus': return <Gift className="w-5 h-5 text-amber-500" />;
+      case 'Freelance': return <Laptop className="w-5 h-5 text-cyan-500" />;
+      case 'Side Hustle': return <Sparkles className="w-5 h-5 text-purple-500" />;
+      case 'Dagang': return <Store className="w-5 h-5 text-emerald-500" />;
+      case 'Hibah / Hadiah': return <Award className="w-5 h-5 text-rose-500" />;
       case 'Investasi': return <TrendingUp className="w-5 h-5 text-teal-500" />;
       case 'Hiburan': return <Gamepad2 className="w-5 h-5 text-purple-500" />;
       default: return <HelpCircle className={`w-5 h-5 ${textColor}`} />;
@@ -770,7 +775,7 @@ export default function TransactionForm({
                 if (cat.txType) {
                   return cat.txType === type;
                 }
-                const isIncomeCategory = cat.name === 'Gaji' || cat.name === 'Bonus';
+                const isIncomeCategory = cat.name === 'Gaji' || cat.name === 'Bonus' || cat.name === 'Freelance' || cat.name === 'Side Hustle' || cat.name === 'Dagang' || cat.name === 'Hibah / Hadiah';
                 if (type === 'pendapatan') {
                   return isIncomeCategory || cat.name === 'Lainnya';
                 } else if (type === 'pengeluaran') {
