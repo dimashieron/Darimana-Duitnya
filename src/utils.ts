@@ -29,8 +29,6 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
 
   // 1. Sanitize simple fields
   const userName = typeof rawState.userName === 'string' && rawState.userName ? rawState.userName : (fallbackState.userName || 'User');
-  const gasUrl = typeof rawState.gasUrl === 'string' ? rawState.gasUrl : fallbackState.gasUrl;
-  const autoSync = typeof rawState.autoSync === 'boolean' ? rawState.autoSync : fallbackState.autoSync;
   const theme = (rawState.theme === 'light' || rawState.theme === 'dark' || rawState.theme === 'system') ? rawState.theme : fallbackState.theme;
 
   // 2. Sanitize transactions list
@@ -139,8 +137,6 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
     investments,
     budgets,
     categories,
-    gasUrl,
-    autoSync,
     theme
   };
 }

@@ -70,7 +70,5 @@ export interface AppState {
   investments: InvestmentAsset[];
   budgets: Budget[];
   categories?: AppCategory[];
-  gasUrl: string; // Google Apps Script URL for Google Sheets Sync
-  autoSync?: boolean; // Toggle auto background sync to google sheets
   theme: 'light' | 'dark' | 'system';
 }
