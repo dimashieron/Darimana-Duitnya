@@ -113,6 +113,23 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
     };
   });
 
+  // 8. Sanitize categories (merge fallback categories to ensure newly added default ones exist)
+  const rawCategories = Array.isArray(rawState.categories) ? rawState.categories : fallbackState.categories;
+  const categories: AppCategory[] = [...rawCategories];
+  fallbackState.categories.forEach((fallbackCat) => {
+    const exists = categories.some(c => c.name.toLowerCase() === fallbackCat.name.toLowerCase());
+    if (!exists) {
+      categories.push(fallbackCat);
+    }
+  });
+
+  // Ensure "Lainnya" is always at the bottom
+  const lainnyaIndex = categories.findIndex(c => c.name.toLowerCase() === 'lainnya');
+  if (lainnyaIndex !== -1) {
+    const [lainnyaItem] = categories.splice(lainnyaIndex, 1);
+    categories.push(lainnyaItem);
+  }
+
   return {
     userName,
     transactions,
@@ -121,7 +138,7 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
     emergencyFund,
     investments,
     budgets,
-    categories: rawState.categories || fallbackState.categories,
+    categories,
     gasUrl,
     autoSync,
     theme

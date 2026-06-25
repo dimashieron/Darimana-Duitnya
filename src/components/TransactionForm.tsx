@@ -733,7 +733,13 @@ export default function TransactionForm({
                       isDefault: false,
                       txType: (type === 'pendapatan' ? 'pendapatan' : 'pengeluaran') as 'pendapatan' | 'pengeluaran'
                     };
-                    updateState({ categories: [...list, newCat] });
+                    const updatedCategories = [...list, newCat];
+                    const lainnyaIndex = updatedCategories.findIndex(c => c.name.toLowerCase() === 'lainnya');
+                    if (lainnyaIndex !== -1) {
+                      const [lainnyaItem] = updatedCategories.splice(lainnyaIndex, 1);
+                      updatedCategories.push(lainnyaItem);
+                    }
+                    updateState({ categories: updatedCategories });
                     setCategory(trimmed);
                     setNewCatName('');
                     if (showToast) showToast(`Kategori "${trimmed}" berhasil dibuat!`);
