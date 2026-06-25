@@ -1,132 +1,116 @@
-# Panduan Lengkap Keuangan Mandiri: Menjalankan & Men-deploy Finance Tracker Pro 🚀
+# 💸 Darimana Duitnya - Pencatat Keuangan Pribadi Modern
 
-Selamat! Aplikasi **Finance Tracker Pro** Anda telah sepenuhnya selesai dikembangkan, diuji, dan siap digunakan. 
+**Darimana Duitnya** adalah aplikasi pencatat keuangan pribadi modern berbasis web (Web App) yang cepat, aman, estetik, dan ramah pengguna seluler (mobile-first). Aplikasi ini didesain khusus untuk memberikan kontrol penuh atas keuangan Anda tanpa iklan dan tanpa melacak data pribadi Anda.
 
-Aplikasi ini dibuat sebagai **Aplikasi Web (Web App)** berbasis React modern. Memilih format Aplikasi Web adalah langkah yang **paling fleksibel dan cerdas** karena:
-1. **Dapat diakses di mana saja**: Otomatis bisa dibuka via Android, iPhone (iOS), iPad, Chromebook, Laptop, MacBook, hingga PC desktop tanpa perlu download file instalasi.
-2. **Bebas biaya toko aplikasi**: Anda tidak perlu membayar biaya pendaftaran akun developer Google Play Store ($25) atau Apple App Store ($99/tahun).
-3. **Instalasi Instan & Ringan**: Tidak menyita memori ponsel Anda, dan dapat ditambahkan ke Layar Utama ponsel agar tampil estetik mirip aplikasi bawaan.
-4. **Pembaruan Otomatis**: Setiap ada pembaruan fitur, seluruh pengguna akan otomatis mendapatkan versi terbaru tanpa perlu melakukan update aplikasi manual.
-
-Buku panduan ini disusun khusus menggunakan **bahasa yang sangat ramah orang awam** agar Anda bisa mempublikasikan aplikasi ini secara mandiri dalam hitungan menit!
+Dengan arsitektur **Offline-First**, semua pencatatan Anda berjalan instan dan aman di perangkat lokal browser Anda. Jika Anda ingin menyinkronkan data antar-perangkat, Anda bisa menghubungkannya langsung ke database awan pribadi Anda menggunakan **Google Sheets** secara gratis!
 
 ---
 
-## 🗺️ DAFTAR ISI PANDUAN
-* **CARA 1: Cara Tercepat & Termudah (Melalui Fitur "Publish" / "Share" di AI Studio — Direkomendasikan!)**
-* **CARA 2: Cara Hosting Mandiri (Self-Host ke Server Sendiri / GitHub)**
-  * *Langkah 1*: Cara Men-download File Kode Aplikasi (ZIP)
-  * *Langkah 2*: Cara Deploy ke Netlify Drop (Seret & Lepas — Gratis Selamanya)
-  * *Langkah 3*: Cara Deploy ke Vercel via GitHub (Otomatis & Profesional)
-* **BAGIAN 3**: Cara Membuat Aplikasi Web Tampil Seperti Aplikasi HP (Android & iOS)
-* **BAGIAN 4**: Panduan Integrasi Awan dengan Google Sheets (Menyimpan Data Anda Secara Aman)
+## 🌟 FITUR UTAMA APLIKASI
+
+1. **Dashboard Interaktif & Ringkas**: Pantau total saldo, arus kas masuk/keluar harian, grafik alokasi keuangan, dan riwayat transaksi terbaru dalam satu halaman.
+2. **Kategori Transaksi yang Lengkap**:
+   - **Pemasukan**: Gaji, Bonus, Freelance, Side Hustle, Dagang, Hibah / Hadiah, dll.
+   - **Pengeluaran**: Makanan, Transportasi, Tagihan, Belanja, Kesehatan, **Hiburan**, **Sedekah**, **Pendidikan**, **Cicilan**, **Hutang**, serta kategori kustom lainnya.
+3. **Manajemen Aset**: Pantau kepemilikan portofolio aset berharga Anda seperti emas, mata uang kripto (crypto), saham, reksadana, atau instrumen tabungan lainnya.
+4. **Rencana Tabungan Impian (Saving Goals)**: Buat dan targetkan tabungan impian Anda (misalnya liburan, gadget baru, atau dana nikah) lengkap dengan bar progres visual yang dinamis.
+5. **Analisis Kesiapan Dana Darurat**: Hitung dan kelola dana darurat ideal berdasarkan perkiraan pengeluaran bulanan Anda agar aman dari kondisi tidak terduga.
+6. **Perencana Anggaran Bulanan (Budgeting)**: Batasi pengeluaran per kategori agar Anda tidak boncos dan kelola batas anggaran bulanan dengan penunjuk visual yang jelas.
+7. **Sinkronisasi Google Sheets Awan**: Sambungkan ke Google Spreadsheet milik Anda sendiri melalui teknologi Google Apps Script. 100% gratis, aman, dan berdaulat penuh atas data Anda sendiri.
+8. **PWA (Progressive Web App)**: Pasang aplikasi ini ke layar beranda HP Anda (Android & iOS) dengan satu klik dan rasakan performa mirip aplikasi native tanpa perlu mengunduh dari App Store/Play Store.
+9. **Dukungan Mobile Native (Capacitor)**: Siap dikompilasi menjadi aplikasi native untuk Android (.apk) atau iOS (.ipa) menggunakan Capacitor.
 
 ---
 
-## ⚡ CARA 1: CARA TERCEPAT & TERMUDA (MENGGUNAKAN "PUBLISH" / "SHARE" DI AI STUDIO)
+## 🚀 CARA PENJALANAN LOKAL (DEVELOPMENT)
 
-Anda tidak perlu ribet mengunduh kode atau mendaftar website hosting lain seperti Netlify/Vercel karena **AI Studio sudah otomatis meng-host aplikasi Anda di jaringan awan Google secara gratis!**
+Bagi pengembang yang ingin mencoba atau mengembangkan aplikasi ini di komputer lokal, ikuti langkah-langkah mudah berikut:
 
-### Langkah-langkahnya:
-1. Hubungkan database Google Sheets terlebih dahulu jika belum (baca panduan lengkap di **BAGIAN 4**).
-2. Di pojok kanan atas layar AI Studio Anda, cukup klik tombol **"Publish"** atau **"Share"**.
-3. Sistem online Google AI Studio akan secara otomatis membangun (build) aplikasi Anda ke mode produksi yang aman, cepat, dan stabil.
-4. Anda akan diberikan sebuah tautan link web yang siap pakai (misal: `https://ais-share-...run.app`).
-5. Selesai! Anda tinggal membuka link tersebut di HP (baca **BAGIAN 3** untuk menjadikannya aplikasi layar utama HP) dan membagikannya ke keluarga atau teman. Aplikasi Anda sudah mengudara secara live!
+### Prasyarat
+- Pastikan komputer Anda sudah terinstal **Node.js** (Versi 18 ke atas direkomendasikan).
 
----
-
-## 📁 CARA 2: CARA HOSTING MANDIRI (SELF-HOST)
-
-Gunakan cara ini jika suatu saat Anda ingin memiliki file mentah kodenya sendiri, memindahkan kodenya ke akun GitHub pribadi, atau ingin menggunakan nama domain custom buatan sendiri (misal: `www.keuanganku.com`).
-
-### Langkah 1: Cara Men-download File Kode Aplikasi (ZIP)
-Jika tombol unduh tidak langsung terlihat di bar atas, berikut cara mencarinya:
-1. Di bilah menu AI Studio (biasanya di samping kiri atau kanan atas), cari ikon **gigi roda (Settings / Pengaturan)** atau menu dropdown bernama **Export/Download**.
-2. Pilih opsi **Export as ZIP / Download Code** untuk menyimpan seluruh kode sumber ke komputer Anda.
-3. Ekstrak file ZIP tersebut di komputer Anda. Anda akan melihat berkas-berkas aplikasi lengkap (seperti folder `src`, `package.json`, `index.html`, dan lainnya).
-
-### Langkah 2: Cara Deploy ke Netlify Drop (Seret & Lepas - Paling Praktis)
-Jika Anda ingin kode mentah Anda di-host di layanan server gratisan Netlify:
-
-#### 1. Membangun File Website Siap Pakai (Build Project)
-Sebelum file diunggah ke internet, kode React perlu diterjemahkan menjadi file website statis (HTML, CSS, JS) standar yang dipahami oleh browser:
-* Buka folder aplikasi Anda menggunakan program **Terminal / Command Prompt** bawaan komputer Anda.
-* Jalankan perintah instalasi pendukung dengan mengetik: `npm install` lalu tekan Enter.
-* Jalankan perintah pembuatan halaman website statis dengan mengetik: `npm run build` lalu tekan Enter.
-* Setelah selesai, Anda akan melihat sebuah folder baru bernama **`dist`** muncul di dalam direktori aplikasi Anda. Folder `dist` inilah website statis Anda yang sebenarnya!
-
-#### 2. Mengunggah ke Netlify Drop
-1. Buka situs web **[Netlify Drop](https://app.netlify.com/drop)** melalui browser Anda.
-2. Tarik (**drag**) folder bernamakan **`dist`** dari komputer Anda, lalu lepaskan (**drop**) ke dalam kotak besar yang tersedia di halaman Netlify Drop tersebut.
-3. Tunggu beberapa detik saja untuk proses upload.
-4. Viola! Halaman Anda langsung aktif di internet. Netlify akan memberikan Anda sebuah tautan gratis, misalnya: `https://nama-acak.netlify.app`.
-5. Anda dapat mendaftarkan akun Netlify gratis untuk mengubah alamat web acak tersebut atau menghubungkan domain khusus Anda di bagian **Domain settings**.
-
-### Langkah 3: Cara Deploy ke Vercel via GitHub (Otomatis & Profesional)
-Metode ini sangat disukai oleh programmer profesional karena website Anda akan otomatis terupdate setiap kali Anda mengubah kode di komputer.
-
-#### 1. Unggah Kode ke GitHub (Gudang Kode Aman)
-1. Buat akun gratis di **[GitHub](https://github.com/)** jika belum ada.
-2. Buat repositori baru dengan memilih tombol **New** (Baru). Beri nama misal: `finance-tracker-pro`, atur akses ke **Private** (agar rahasia), lalu klik **Create repository**.
-3. Unduh dan gunakan aplikasi gratis **[GitHub Desktop](https://desktop.github.com/)** (sangat ramah pemula) untuk memasukkan folder kode Anda ke repositori GitHub tersebut.
-
-#### 2. Sambungkan ke Vercel (Hosting Instan & Cepat)
-1. Buka situs **[Vercel](https://vercel.com/)** dan daftar (Sign Up) menggunakan akun **GitHub** Anda.
-2. Di halaman utama Vercel, pilih tombol **Add New...** di sebelah kanan atas > pilih **Project**.
-3. Anda akan melihat nama repositori `finance-tracker-pro` yang baru dibuat di GitHub. Pilih **Import**.
-4. Biarkan semua pengaturan tetap seperti bawaan, lalu pilih tombol **Deploy** di bagian bawah.
-5. Vercel akan otomatis menyusun website Anda dalam waktu singkat. Selesai! Anda akan mendapatkan tautan website permanen berakhiran `.vercel.app`.
+### Langkah-langkah
+1. **Unduh atau Clone Kode**:
+   ```bash
+   git clone https://github.com/username/darimana-duitnya.git
+   cd darimana-duitnya
+   ```
+2. **Instalasi Dependensi**:
+   ```bash
+   npm install
+   ```
+3. **Jalankan Server Pengembangan**:
+   ```bash
+   npm run dev
+   ```
+4. **Buka Aplikasi**:
+   Buka browser Anda dan akses halaman `http://localhost:3000` atau alamat IP yang tertera pada terminal Anda.
 
 ---
 
-## 📱 BAGIAN 3: MENJADIKAN APLIKASI WEB TAMPIL SEPERTI APLIKASI HP
+## 🗺️ PANDUAN DEPLOYMENT (MEMPUBLIKASIKAN KE INTERNET)
 
-Agar Anda dan pengguna lainnya bisa memantau keuangan harian dengan nyaman seolah menggunakan aplikasi bawaan smartphone (tanpa bilah pencarian browser di bagian atas), lakukan langkah mudah ini:
+Anda dapat mengunggah aplikasi ini agar bisa diakses secara online gratis selamanya. Berikut adalah 3 cara paling populer dan direkomendasikan:
 
-### 🤖 Untuk Pengguna Android (Google Chrome)
+### CARA 1: Melalui Vercel via GitHub (Otomatis & Sangat Direkomendasikan)
+Metode ini sangat disukai karena setiap kali Anda memperbarui kode di GitHub, website online Anda akan diperbarui secara otomatis.
+1. Buat akun gratis di **[GitHub](https://github.com/)**.
+2. Buat repositori baru (misal: `darimana-duitnya`), atur visibilitas ke **Private** atau **Public**, lalu unggah kode aplikasi Anda ke sana.
+3. Buka situs **[Vercel](https://vercel.com/)** dan masuk (Sign In) menggunakan akun GitHub Anda.
+4. Klik tombol **Add New...** > pilih **Project**.
+5. Pilih repositori `darimana-duitnya` yang Anda buat, lalu klik **Import**.
+6. Biarkan seluruh pengaturan default (Vercel otomatis mendeteksi proyek Vite), lalu klik **Deploy**.
+7. Dalam beberapa detik, aplikasi Anda sudah online dengan domain permanen berakhiran `.vercel.app`.
+
+### CARA 2: Melalui Netlify Drop (Seret & Lepas - Tercepat Tanpa Coding)
+Jika Anda ingin menerbitkan aplikasi tanpa perlu bersentuhan dengan GitHub:
+1. Buka terminal di komputer Anda, lalu buat file produksi siap pakai dengan mengetikkan:
+   ```bash
+   npm run build
+   ```
+2. Setelah proses selesai, akan muncul sebuah folder baru bernama **`dist`** di dalam direktori proyek Anda. Folder `dist` ini berisi halaman web statis yang telah dikompres secara optimal.
+3. Buka situs web **[Netlify Drop](https://app.netlify.com/drop)** pada browser.
+4. Tarik (**drag**) folder **`dist`** dari file explorer komputer Anda, lalu letakkan (**drop**) ke dalam area unggahan di layar Netlify Drop tersebut.
+5. Tunggu proses unggahan selesai dan aplikasi Anda akan langsung mengudara di internet secara instan!
+
+---
+
+## 📱 CARA MEMASANG APLIKASI DI HP (ANDROID & IOS)
+
+Agar aplikasi web ini tampil dan berjalan layaknya aplikasi HP sungguhan (tanpa bilah pencarian URL browser yang mengganggu), ikuti panduan berikut:
+
+### 🤖 Pengguna Android (Google Chrome)
 1. Buka peramban **Google Chrome** di ponsel Android Anda.
-2. Ketik dan masuk ke tautan website hasil deploy Anda (misal: `https://finance-tracker-pro.vercel.app`).
-3. Ketuk tanda **tiga titik vertikal** di sudut kanan atas layar Chrome.
-4. Pilih opsi **Tambahkan ke Layar Utama** (atau **Add to Home screen**).
-5. Beri nama aplikasi Anda, misal: `Finance Tracker`, lalu klik **Tambahkan**.
-6. Ikon aplikasi akan otomatis tampil di halaman aplikasi ponsel Anda dengan mulus!
+2. Akses alamat website hasil deploy aplikasi Anda (misal: `https://darimana-duitnya.vercel.app`).
+3. Ketuk ikon **tiga titik vertikal** di pojok kanan atas layar Chrome.
+4. Pilih menu **Tambahkan ke Layar Utama** (atau **Add to Home screen**).
+5. Berikan nama, lalu ketuk **Tambahkan**. Ikon aplikasi estetik akan langsung muncul di halaman beranda ponsel Anda!
 
-### 🍏 Untuk Pengguna iPhone / iPad (Safari)
-1. Buka peramban **Safari** bawaan iPhone Anda.
-2. Akses tautan website hasil deploy Anda.
-3. Ketuk ikon **Bagikan** (Share button - gambar kotak beranak panah ke atas) di bagian bawah layar.
-4. Gulir sedikit ke bawah dan ketuk pilihan **Tambahkan ke Layar Utama** (atau **Add to Home Screen**).
-5. Ketuk **Tambah** di pojok kanan atas layar.
-6. Aplikasi akan langsung bertengger di layar beranda ponsel Anda dengan logo ikon yang estetik!
+### 🍏 Pengguna iPhone & iPad (Safari)
+1. Buka peramban bawaan **Safari** di iPhone Anda.
+2. Akses alamat website hasil deploy aplikasi Anda.
+3. Ketuk tombol **Bagikan / Share** (ikon kotak dengan anak panah menunjuk ke atas) di bagian bawah layar.
+4. Gulir menu ke bawah lalu pilih opsi **Tambahkan ke Layar Utama** (atau **Add to Home Screen**).
+5. Ketuk **Tambah** di pojok kanan atas. Aplikasi akan bertengger manis di beranda iPhone Anda dan siap dibuka kapan saja!
 
 ---
 
-## 📊 BAGIAN 4: PANDUAN INTEGRASI DATABASE GOOGLE SHEETS
+## 📊 INTEGRASI DATABASE CLOUD: GOOGLE SHEETS APPS SCRIPT
 
-Untuk memastikan data transaksi keuangan Anda tidak hilang bila berganti perangkat, hubungkan aplikasi web Anda ke Google Spreadsheet Anda sendiri dengan panduan Apps Script berikut:
+Aplikasi ini mengusung kedaulatan data penuh. Agar data Anda aman saat berganti browser atau berganti perangkat, hubungkan aplikasi ini dengan Google Spreadsheet Anda sendiri dengan panduan langkah demi langkah di bawah ini:
 
-### 1. Daftar Sheet yang Akan Dibuat Otomatis
-Apps Script di bawah ini akan secara otomatis membuat dan menyegarkan sheet berikut di spreadsheet Anda saat sinkronisasi pertama kali dijalankan:
-1. **TRANSAKSI** — Menyimpan seluruh riwayat pengeluaran, pemasukan, tabungan, investasi, dan jual aset.
-2. **DOMPET** — Menyimpan sisa saldo terbaru dari setiap akun nominal Anda.
-3. **TABUNGAN** — Menyimpan target tabungan impian Anda berserta saldonya.
-4. **DANA_DARURAT** — Konfigurasi target pengeluaran bulanan dan kesiapan dana darurat.
-5. **INVESTASI** — Menyimpan kepemilikan aset (emas, crypto, saham) beserta nilainya.
-6. **ANGGARAN** — Menyimpan batasan anggaran bulanan per kategori transaksi.
+### 1. Buat Spreadsheet Baru
+1. Masuk ke [Google Sheets](https://sheets.google.com/) menggunakan akun Google Anda.
+2. Buat lembar kerja kosong baru (blank spreadsheet) dan berikan nama, misalnya: `Database Keuangan - Darimana Duitnya`.
 
-### 2. Membuat Spreadsheet dan Membuka Apps Script
-1. Pergi ke halaman [Google Sheets](https://sheets.google.com/) lalu buat sebuah spreadsheet baru (tekan tombol **+ / Kosong**).
-2. Berikan nama spreadsheet Anda sesuai selera, contoh: `Database Keuangan - Finance Tracker Pro`.
-3. Pada halaman spreadsheet, klik menu **Ekstensi** > pilih **Apps Script** di bagian atas halaman.
-4. Hapus seluruh baris kode default yang ada di dalam editor halaman editor Apps Script tersebut (`function myFunction() { ... }`).
-
-### 3. Salin & Tempel Kode Apps Script Berikut
-Salin dan tempelkan seluruh kode JavaScript di bawah ini ke dalam halaman editor Apps Script Anda:
+### 2. Pasang Kode Google Apps Script
+1. Pada menu navigasi atas spreadsheet, klik **Ekstensi** > pilih **Apps Script**.
+2. Hapus seluruh isi kode bawaan (`function myFunction() { ... }`).
+3. Salin dan tempelkan seluruh kode berikut ke dalam editor Apps Script Anda:
 
 ```javascript
 /**
- * Apps Script API Gateway untuk Finance Tracker Pro
+ * Apps Script API Gateway untuk Darimana Duitnya
  * Menghubungkan Webapp dengan Database Google Spreadsheet
  */
 
@@ -243,30 +227,33 @@ function updateSheet(ss, sheetName, dataArray) {
 }
 ```
 
-### 4. Men-Deploy Apps Script sebagai Web App
-1. Klik logo disket (**Simpan Proyek**) di bagian atas halaman editor Apps Script.
-2. Klik tombol **Terapkan (Deploy)** di samping kanan atas halaman > pilih **Penerapan Baru (New Deployment)**.
-3. Pada halaman penerapan baru:
-   * Klik ikon gerigi (**Jenis Penerapan**) > pilih **Aplikasi Web (Web App)**.
-   * Pada kolom deskripsi, tulis: `Finance API v1`.
-   * Pada kolom **Grup Aplikasi Sebagai (Execute as)**, pilih: **Saya (Email Anda)**.
-   * Pada kolom **Siapa yang memiliki akses (Who has access)**, pilih: **Siapa saja (Anyone)**. *(Bagian ini krusial agar aplikasi Anda dapat mengirimkan data ke sheet)*.
+### 3. Deploy sebagai Aplikasi Web
+1. Klik tombol **Simpan** (ikon disket) di toolbar atas editor Apps Script.
+2. Klik tombol **Terapkan / Deploy** di pojok kanan atas > pilih **Penerapan Baru (New Deployment)**.
+3. Konfigurasikan penerapan baru Anda:
+   - Klik ikon gerigi (Pilih Jenis) > pilih **Aplikasi Web (Web App)**.
+   - Kolom Deskripsi: `Darimana Duitnya Sync Gateway`.
+   - Jalankan sebagai (Execute as): **Saya (Email Anda)**.
+   - Siapa yang memiliki akses (Who has access): **Siapa saja (Anyone)**. *(Catatan: Ini aman karena transfer data dienkripsi dan hanya dapat diakses melalui endpoint web app terenkripsi Anda).*
 4. Klik tombol **Terapkan (Deploy)**.
-5. Google akan meminta otorisasi akun. Klik **Beri Akses / Authorize Access**, lalu pilih akun Google Anda. Jika muncul peringatan *"Google has not verified this app"*, klik **Advanced** (Lanjutan) di kiri bawah, lalu pilih **Go to Untitled Project (unsafe)**. Hal ini 100% aman karena Anda adalah pemilik kode skrip ini secara mandiri.
-6. Salin tautan **URL Aplikasi Web (Web App URL)** yang ditampilkan layar. URL akan berakhiran `/exec`.
+5. Klik **Beri Akses (Authorize Access)** jika diminta oleh Google, lalu pilih akun Google Anda. Jika muncul peringatan keamanan *"Google has not verified this app"*, pilih **Advanced / Lanjutan** di pojok kiri bawah layar, lalu klik **Go to Untitled Project (unsafe)** untuk menyetujuinya.
+6. Salin **URL Aplikasi Web** yang diberikan oleh Google di akhir halaman (URL yang berakhiran dengan `/exec`).
 
-### 5. Menghubungkan Aplikasi Web Dengan Spreadsheet
-1. Buka aplikasi **Finance Tracker Pro** hasil deploy Anda.
-2. Masuk ke halaman **Settings** (Pengaturan), dengan mengetuk ikon gerigi.
-3. Temukan kolom **URL Google Apps Script**.
-4. Tempelkan tautan URL `/exec` yang sudah Anda salin sebelumnya.
-5. Klik **Simpan Pengaturan**.
-6. Sekarang, uji koneksi dengan menekan tombol **Sinkronisasi ke Spreadsheet**. Seluruh tab sheet akan terbuat secara ajaib dan terisi data-data keuangan Anda secara real-time!
+### 4. Hubungkan ke Aplikasi Web "Darimana Duitnya"
+1. Buka aplikasi **Darimana Duitnya** yang telah Anda deploy online.
+2. Pergi ke tab **Settings** (Pengaturan, ikon roda gigi ⚙️).
+3. Cari bidang input bertuliskan **URL Google Apps Script**.
+4. Tempelkan URL `/exec` yang sudah Anda salin tadi ke kolom tersebut.
+5. Tekan tombol **Simpan Pengaturan**.
+6. Uji koneksi dengan mengeklik tombol **Sinkronisasi ke Spreadsheet**.
+7. Selamat! Semua sheet transaksi, dompet, tabungan, dana darurat, investasi, dan anggaran bulanan akan secara otomatis terbuat dan terisi secara dinamis dengan data Anda!
 
 ---
 
-## 🔒 KEUNGGULAN UTAMA (offline-first & Kedaulatan Data)
-* **Kedaulatan Data**: Semua catatan keuangan Anda tersimpan aman secara lokal di browser dan di Google Sheets milik Anda sendiri. Tidak ada server pihak ketiga yang mengintip, menjual, atau melacak rincian kekayaan Anda.
-* **Bekerja Offline**: Meskipun Anda sedang tidak tersambung dengan koneksi internet (seperti di penerbangan atau daerah terpencil), Anda tetap dapat mencatat keuangan dengan lancar. Data Anda akan terakumulasi aman dan siap disinkronkan kembali saat Anda mendapatkan akses internet!
+## 🔒 KEAMANAN & PRIVASI DATA (DATA SOVEREIGNTY)
 
-Selesai! Nikmati kebebasan finansial dan mulailah bersenang-senang mengelola kekayaan Anda secara lebih produktif dengan **Finance Tracker Pro**! 🌟
+- **Tanpa Pihak Ketiga**: Data keuangan Anda adalah privasi mutlak Anda. Tidak ada database perantara, server analitik berbayar, atau pengiklan yang dapat melihat transaksi harian Anda.
+- **Satu Akun Google**: Semua aliran data hanya berpindah secara langsung antara browser lokal Anda dan Google Drive pribadi Anda via Google Spreadsheet Anda.
+- **Bekerja Offline**: Sangat praktis mencatat pengeluaran di mana saja (misal dalam pesawat atau area basement parkiran) tanpa kuota internet. Data akan disimpan aman di browser dan disinkronkan saat jaringan internet telah aktif kembali.
+
+Selamat menggunakan dan nikmati kedaulatan finansial Anda seutuhnya bersama **Darimana Duitnya**! 💸🌟
