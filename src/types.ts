@@ -71,4 +71,6 @@ export interface AppState {
   budgets: Budget[];
   categories?: AppCategory[];
   theme: 'light' | 'dark' | 'system';
+  isActivated?: boolean;
+  activationCode?: string;
 }

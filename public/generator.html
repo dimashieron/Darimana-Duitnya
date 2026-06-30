@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Darimana Duitnya? - License Generator</title>
+  <link rel="icon" type="image/png" href="/icon.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2489/2489756.png'">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;750&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Config to match Darimana Duitnya's aesthetic -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 40%),
+                  radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 40%),
+                  #0f172a;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[2px] shadow-lg shadow-emerald-500/10">
+          <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center font-extrabold text-transparent bg-clip-text bg-gradient-to-tr from-emerald-400 to-teal-300 text-sm">
+            DD
+          </div>
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
+            Darimana Duitnya? <span class="text-emerald-400">PRO</span>
+          </h1>
+          <p class="text-[10px] text-slate-400 uppercase font-mono tracking-wider font-semibold">Dashboard Pembuat Lisensi</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+        <span class="text-xs text-slate-400 font-mono">Server Validasi Aktif</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto w-full px-4 py-8 flex-1 flex flex-col justify-center">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+      
+      <!-- Input Section (7 Cols) -->
+      <section class="md:col-span-7 space-y-6">
+        <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 md:p-8 shadow-xl backdrop-blur-md">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+            Data Pembelian Baru
+          </h2>
+          <p class="text-xs text-slate-400 mb-6 leading-relaxed">Formulir ini memformat data ke standar enkripsi server <code class="bg-slate-800/80 px-1 py-0.5 rounded text-emerald-400 font-mono">NAMA_TANGGAL_KODEUNIK</code>.</p>
+
+          <form id="licenseForm" class="space-y-5" onsubmit="event.preventDefault();">
+            <!-- Buyer Name -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2" for="buyerName">Nama Lengkap Pembeli</label>
+              <div class="relative rounded-xl">
+                <input 
+                  type="text" 
+                  id="buyerName" 
+                  placeholder="CONTOH: DIMAS" 
+                  class="w-full bg-slate-950/60 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-650 uppercase font-bold tracking-wide transition outline-none"
+                  oninput="generateLicense()"
+                >
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1.5">Gunakan nama pendek/panggilan satu kata tanpa spasi atau tanda baca.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Purchase Date -->
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2" for="purchaseDate">Tanggal Pembelian</label>
+                <input 
+                  type="date" 
+                  id="purchaseDate" 
+                  class="w-full bg-slate-950/60 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 rounded-xl px-4 py-3 text-sm text-slate-100 font-mono transition outline-none"
+                  onchange="onDateChange()"
+                >
+              </div>
+
+              <!-- Unique Suffix -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider" for="suffix">Kode Suffix Unik</label>
+                  <button 
+                    type="button" 
+                    onclick="randomizeSuffix()" 
+                    class="text-xs text-emerald-400 hover:text-emerald-300 font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 19h-1.583m-15.35-2H3.83m0 0a8 8 0 1115.352-7.72H16"></path>
+                    </svg>
+                    Acak Suffix
+                  </button>
+                </div>
+                <input 
+                  type="text" 
+                  id="suffix" 
+                  placeholder="CONTOH: XYZ88" 
+                  maxlength="12"
+                  class="w-full bg-slate-950/60 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 rounded-xl px-4 py-3 text-sm text-slate-100 uppercase font-mono font-bold tracking-widest transition outline-none"
+                  oninput="generateLicense()"
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Result Section (5 Cols) -->
+      <section class="md:col-span-5 space-y-6">
+        <!-- License Display -->
+        <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
+          
+          <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Lisensi Siap Kirim
+          </h3>
+          
+          <!-- Key Output Box -->
+          <div class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl relative group">
+            <div id="licenseOutput" class="text-center font-mono font-bold tracking-widest text-base py-2 text-slate-400 select-all truncate uppercase">
+              NAMA_TANGGAL_KODEUNIK
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="grid grid-cols-2 gap-3 mt-4">
+            <button 
+              id="copyBtn"
+              onclick="copyToClipboard('license')" 
+              class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10 cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-5 10h5m-5 4h5m-2-12h.01M19 12H5"></path>
+              </svg>
+              <span>Salin Kode</span>
+            </button>
+            <button 
+              id="whatsappBtn"
+              onclick="copyToClipboard('message')" 
+              class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/10 cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+              <span>Salin Chat</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Message Preview -->
+        <div class="bg-slate-900/30 border border-slate-800/60 rounded-2xl p-5 space-y-3">
+          <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+            </svg>
+            Pratinjau Pesan Pelanggan
+          </h4>
+          <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-900/50 text-xs text-slate-300 font-sans leading-relaxed whitespace-pre-line" id="messagePreview">
+            Belum ada data pembeli...
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-6 bg-slate-950/50">
+    <div class="max-w-4xl mx-auto px-4 text-center text-slate-500 text-xs flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p>Darimana Duitnya? &copy; 2026 - Versi Lisensi Offline Dinamis</p>
+      <div class="flex gap-4">
+        <a href="/" class="hover:text-emerald-400 transition">Kembali ke Aplikasi Utama</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let activeDateStr = '';
+
+    // Initialize with today's date
+    window.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      
+      // Set input element value
+      document.getElementById('purchaseDate').value = `${yyyy}-${mm}-${dd}`;
+      activeDateStr = `${yyyy}${mm}${dd}`;
+
+      randomizeSuffix();
+    });
+
+    function onDateChange() {
+      const dateVal = document.getElementById('purchaseDate').value;
+      if (dateVal) {
+        // convert YYYY-MM-DD to YYYYMMDD
+        activeDateStr = dateVal.replace(/-/g, '');
+      } else {
+        activeDateStr = '';
+      }
+      generateLicense();
+    }
+
+    function randomizeSuffix() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let suffix = '';
+      for (let i = 0; i < 5; i++) {
+        suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('suffix').value = suffix;
+      generateLicense();
+    }
+
+    function generateLicense() {
+      const rawName = document.getElementById('buyerName').value;
+      const cleanName = rawName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      
+      const rawSuffix = document.getElementById('suffix').value;
+      const cleanSuffix = rawSuffix.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+      const outputElement = document.getElementById('licenseOutput');
+      const previewElement = document.getElementById('messagePreview');
+
+      const isNameOk = cleanName.length >= 2;
+      const isDateOk = activeDateStr.length === 8;
+      const isSuffixOk = cleanSuffix.length >= 4;
+
+      if (isNameOk && isDateOk && isSuffixOk) {
+        const licenseKey = `${cleanName}_${activeDateStr}_${cleanSuffix}`;
+        
+        outputElement.innerText = licenseKey;
+        outputElement.classList.remove('text-slate-400', 'text-amber-500/70');
+        outputElement.classList.add('text-emerald-400');
+
+        // Render clean human readable date
+        const d = activeDateStr;
+        const formattedDate = `${d.substring(6, 8)}/${d.substring(4, 6)}/${d.substring(0, 4)}`;
+
+        // Message template
+        const customerMessage = `Halo kak ${rawName.trim()}! Terimakasih telah melakukan pembelian aplikasi *Darimana Duitnya? PRO*. 🌟
+
+Berikut adalah kode lisensi aktivasi resmi Anda untuk perangkat ini:
+
+🔑 *KODE LISENSI:* \`${licenseKey}\`
+
+*Cara Aktivasi:*
+1. Buka aplikasi *Darimana Duitnya?*
+2. Masuk ke tab *Pengaturan* (ikon Roda Gigi di kanan atas).
+3. Masukkan kode di atas pada kolom *Masukkan Kode Aktivasi*, lalu klik *Aktifkan*.
+4. Akses tak terbatas berhasil terbuka selamanya!
+
+Simpan baik-baik pesan ini ya kak. Selamat mencatat & mengontrol finansial! 💸`;
+
+        previewElement.innerText = customerMessage;
+        previewElement.classList.remove('text-slate-500');
+        previewElement.classList.add('text-slate-300');
+      } else {
+        outputElement.innerText = 'NAMA_TANGGAL_KODEUNIK';
+        outputElement.classList.remove('text-emerald-400');
+        outputElement.classList.add('text-slate-400');
+
+        let hint = "Lengkapi formulir untuk menghasilkan lisensi dan template pesan pembeli:\n\n";
+        if (!isNameOk) hint += "• Nama pembeli harus diisi (min. 2 karakter)\n";
+        if (!isDateOk) hint += "• Tanggal pembelian harus valid\n";
+        if (!isSuffixOk) hint += "• Suffix kode unik minimal 4 karakter\n";
+
+        previewElement.innerText = hint;
+        previewElement.classList.add('text-slate-500');
+      }
+    }
+
+    function copyToClipboard(type) {
+      let content = '';
+      let btnElement;
+      
+      if (type === 'license') {
+        const text = document.getElementById('licenseOutput').innerText;
+        if (text === 'NAMA_TANGGAL_KODEUNIK') return;
+        content = text;
+        btnElement = document.getElementById('copyBtn');
+      } else {
+        const text = document.getElementById('messagePreview').innerText;
+        if (text.startsWith('Lengkapi formulir') || text.startsWith('Belum ada')) return;
+        content = text;
+        btnElement = document.getElementById('whatsappBtn');
+      }
+
+      navigator.clipboard.writeText(content).then(() => {
+        const originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span>Tersalin!</span>
+        `;
+        btnElement.classList.remove('bg-emerald-500', 'bg-indigo-600');
+        btnElement.classList.add('bg-teal-500');
+
+        setTimeout(() => {
+          btnElement.innerHTML = originalHtml;
+          btnElement.classList.remove('bg-teal-500');
+          if (type === 'license') {
+            btnElement.classList.add('bg-emerald-500');
+          } else {
+            btnElement.classList.add('bg-indigo-600');
+          }
+        }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

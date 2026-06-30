@@ -55,6 +55,10 @@ Aplikasi **Darimana Duitnya** dilengkapi dengan berbagai modul keuangan komprehe
 8. **Dukungan Mobile Native (Capacitor ready)**:
    - Arsitektur kode terstruktur rapi dan siap dikompilasi menjadi paket aplikasi native Android (`.apk` / `.aab`) atau iOS (`.ipa`) menggunakan Capacitor.
 
+9. **Sistem Lisensi & Aktivasi Luring (Offline Activation)**:
+   - Membatasi pencatatan maksimal **10 transaksi** pada mode belum diaktivasi untuk memelihara performa data luring.
+   - Akses tak terbatas (*unlimited*) selamanya dapat dibuka secara instan di perangkat dengan memasukkan kode lisensi gratis seperti **BEBASBONCOS** atau **OFFLINEPRO** langsung di menu pengaturan atau lewat jendela peringatan batas transaksi.
+
 ---
 
 ## 🗄️ PANDUAN CADANGAN DATA (BACKUP & RESTORE JSON)
@@ -117,27 +121,40 @@ Bagi Anda yang ingin menguji atau memodifikasi kode program aplikasi ini di komp
 
 ## 🗺️ PANDUAN DEPLOYMENT (MEMPUBLIKASIKAN KE INTERNET SECARA GRATIS)
 
-Mempublikasikan aplikasi web ini sangatlah mudah dan gratis. Berikut adalah 2 metode paling populer:
+Mempublikasikan aplikasi full-stack (frontend React + backend Express) ini sangatlah mudah dan gratis. Berikut adalah platform terbaik yang direkomendasikan:
 
-### CARA 1: Deploy Otomatis via Vercel (Sangat Direkomendasikan)
-Vercel akan membangun ulang website Anda secara otomatis setiap kali Anda mengirimkan perubahan kode ke GitHub.
-1. Unggah kode proyek Anda ke dalam sebuah repositori di **[GitHub](https://github.com/)** (bisa diatur ke Private agar aman).
-2. Buat akun gratis di **[Vercel](https://vercel.com/)** dan hubungkan dengan akun GitHub Anda.
-3. Klik tombol **Add New...** > pilih **Project**.
-4. Cari dan pilih repositori `darimana-duitnya` Anda, lalu klik **Import**.
-5. Biarkan pengaturan default proyek Vite, lalu klik **Deploy**.
-6. Dalam beberapa detik, aplikasi Anda sudah online dan dapat diakses publik melalui domain gratis berakhiran `.vercel.app`.
+### CARA 1: Deploy Gratisan Full-Stack dengan Render (SANGAT DIREKOMENDASIKAN)
+**Render** sangat cocok untuk aplikasi ini karena mendukung server Express.js + React secara utuh dengan gratis (Free Tier).
 
-### CARA 2: Pasang Manual via Netlify Drop (Tercepat & Tanpa Akun GitHub)
-Jika Anda hanya ingin langsung menaruh berkas aplikasi ke internet tanpa melalui proses Git:
-1. Jalankan perintah build di terminal lokal komputer Anda:
-   ```bash
-   npm run build
-   ```
-2. Perintah di atas akan mengompilasi dan mengompres seluruh aset web ke dalam sebuah folder baru bernama **`dist`**.
-3. Buka halaman **[Netlify Drop](https://app.netlify.com/drop)** di browser Anda.
-4. Seret (**drag**) folder **`dist`** dari file explorer komputer Anda, dan letakkan (**drop**) ke dalam kotak unggahan Netlify Drop.
-5. Halaman web Anda akan langsung online seketika dan siap dibagikan!
+1. Unggah kode proyek Anda ke repositori pribadi (**Private Repository**) di **[GitHub](https://github.com/)** demi menjaga kerahasiaan.
+2. Buat akun gratis di **[Render](https://render.com/)** dan hubungkan akun GitHub Anda.
+3. Di dashboard Render, klik tombol **New +** dan pilih **Web Service**.
+4. Hubungkan repositori GitHub Anda yang berisi kode aplikasi ini.
+5. Isi konfigurasi berikut:
+   - **Name**: `darimana-duitnya` (atau sesuai keinginan)
+   - **Environment / Runtime**: `Node`
+   - **Region**: Pilih lokasi terdekat (misal: `Singapore` untuk Indonesia)
+   - **Branch**: `main`
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+6. Gulir ke bawah, pilih opsi **Free Instance Type**, lalu klik **Create Web Service**.
+7. Selesai! Render akan membangun (build) frontend dan backend secara otomatis. Setelah selesai, Anda akan mendapatkan URL web gratis berakhiran `.onrender.com`.
+
+### CARA 2: Deploy Full-Stack dengan Railway (Alternatif Sangat Cepat & Handal)
+**Railway** mendeteksi struktur Node.js secara otomatis dan langsung menjalankan build dengan luar biasa cepat.
+
+1. Unggah kode proyek Anda ke **GitHub**.
+2. Buat akun di **[Railway](https://railway.app/)** menggunakan akun GitHub Anda.
+3. Klik **New Project** > **Deploy from GitHub repo**, lalu pilih repositori proyek ini.
+4. Railway akan mendeteksi file `package.json` secara otomatis, mengompilasi kode, dan menjalankan server Express pada port yang sesuai.
+5. Buka tab **Settings** pada dashboard Railway Anda, lalu pada bagian **Environment**, buat domain gratis (klik **Generate Domain**).
+6. Aplikasi Anda siap diakses lengkap dengan backend aktif!
+
+### CARA 3: Alternatif Frontend Saja (Tanpa Backend) via Vercel / Netlify
+Jika Anda hanya mempublikasikan versi client-side (aplikasi web luring tanpa validasi server):
+- **Vercel**: Hubungkan GitHub, pilih default Vite, lalu klik **Deploy**.
+- **Netlify Drop**: Jalankan `npm run build` secara lokal, lalu seret folder `dist` ke halaman **[Netlify Drop](https://app.netlify.com/drop)**.
+*(Catatan: Mode frontend-only tidak akan bisa melakukan panggilan API `/api/activate` ke server).*
 
 ---
 

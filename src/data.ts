@@ -25,6 +25,8 @@ export const INITIAL_STATE: AppState = {
   savingGoals: [],
   budgets: [],
   transactions: [],
+  isActivated: false,
+  activationCode: '',
   categories: [
     { name: 'Makanan', icon: 'Utensils', color: 'bg-red-100 text-red-600 dark:bg-red-955 dark:text-red-400', isDefault: true },
     { name: 'Transportasi', icon: 'Car', color: 'bg-blue-100 text-blue-600 dark:bg-blue-955 dark:text-blue-400', isDefault: true },

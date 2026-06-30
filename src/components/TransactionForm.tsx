@@ -11,7 +11,7 @@ import {
   Laptop, Sparkles, Store, Award, GraduationCap, CreditCard
 } from 'lucide-react';
 import { AppState, Transaction, TransactionType, Wallet as WalletType, SavingGoal, InvestmentAsset, AppCategory } from '../types';
-import { formatRupiah, generateId, formatYYYYMMDDToDDMMYY, getLocalYYYYMMDD } from '../utils';
+import { formatRupiah, generateId, formatYYYYMMDDToDDMMYY, getLocalYYYYMMDD, validateCodeLocally } from '../utils';
 import { CATEGORIES } from '../data';
 
 interface TransactionFormProps {
@@ -51,6 +51,11 @@ export default function TransactionForm({
     message: string;
     onConfirm: () => void;
   } | null>(null);
+
+  // Activation state variables
+  const [showActivationBlock, setShowActivationBlock] = useState(false);
+  const [activationCodeInput, setActivationCodeInput] = useState('');
+  const [activationError, setActivationError] = useState('');
 
   // States for dynamic custom categories creator inside the choosing category popup
   const [newCatName, setNewCatName] = useState('');
@@ -202,6 +207,11 @@ export default function TransactionForm({
     
     const amount = parseFloat(nominal.replace(/[^0-9]/g, '')) || 0;
     if (amount <= 0) return;
+
+    if (!editTransaction && state.transactions.length >= 10 && !state.isActivated) {
+      setShowActivationBlock(true);
+      return;
+    }
 
     if (editTransaction) {
       setConfirmModal({
@@ -407,6 +417,114 @@ export default function TransactionForm({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/70 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 font-sans animate-fade-in">
+      {showActivationBlock && (
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-155 dark:border-slate-800 text-center">
+            <div className="mx-auto w-12 h-12 bg-amber-50 dark:bg-amber-955/30 text-amber-500 rounded-full flex items-center justify-center mb-4">
+              <Coins className="w-6 h-6 animate-pulse" />
+            </div>
+            
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2">Batas Transaksi Tercapai!</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              Sebagai versi gratis offline, pencatatan dibatasi maksimal <strong>10 transaksi</strong>. 
+              Masukkan Kode Aktivasi untuk membuka akses tanpa batas selamanya di perangkat ini!
+            </p>
+
+             <div className="space-y-3 mb-5">
+              <input
+                type="text"
+                placeholder="Masukkan Kode Aktivasi"
+                value={activationCodeInput}
+                onChange={(e) => {
+                  setActivationCodeInput(e.target.value);
+                  setActivationError('');
+                }}
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-center font-bold tracking-widest text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 uppercase"
+              />
+              
+              {activationError && (
+                <p className="text-[11px] text-rose-500 font-bold">{activationError}</p>
+              )}
+              
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                💡 Masukkan kode lisensi resmi yang Anda dapatkan saat pembelian untuk mengaktifkan akses tak terbatas.
+              </p>
+            </div>
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowActivationBlock(false);
+                  setActivationError('');
+                }}
+                className="flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-755 text-slate-600 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-100 dark:border-slate-700 active:scale-95 transition-all text-center cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const cleanCode = activationCodeInput.trim();
+                  if (!cleanCode) {
+                    setActivationError('Silakan masukkan kode.');
+                    return;
+                  }
+                  try {
+                    const response = await fetch('/api/activate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ code: cleanCode })
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                      updateState({
+                        isActivated: true,
+                        activationCode: result.code
+                      });
+                      setShowActivationBlock(false);
+                      setActivationError('');
+                      if (showToast) showToast(result.message || 'Aktivasi Berhasil! Batas transaksi dihapus.');
+                    } else {
+                      // Server returned an error, check locally as fallback
+                      const localCheck = validateCodeLocally(cleanCode);
+                      if (localCheck && localCheck.success) {
+                        updateState({
+                          isActivated: true,
+                          activationCode: localCheck.code
+                        });
+                        setShowActivationBlock(false);
+                        setActivationError('');
+                        if (showToast) showToast(localCheck.message || 'Aktivasi Berhasil! Batas transaksi dihapus.');
+                      } else {
+                        setActivationError(result.message || 'Kode aktivasi salah! Silakan coba lagi.');
+                      }
+                    }
+                  } catch (e) {
+                    // Fetch failed (offline/Vercel serverless), check locally
+                    const localCheck = validateCodeLocally(cleanCode);
+                    if (localCheck && localCheck.success) {
+                      updateState({
+                        isActivated: true,
+                        activationCode: localCheck.code
+                      });
+                      setShowActivationBlock(false);
+                      setActivationError('');
+                      if (showToast) showToast(localCheck.message || 'Aktivasi Berhasil! Batas transaksi dihapus.');
+                    } else {
+                      setActivationError('Kode aktivasi tidak valid atau gagal menghubungi server.');
+                    }
+                  }
+                }}
+                className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition-all text-center cursor-pointer"
+              >
+                Aktifkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmModal && confirmModal.isOpen && (
         <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-fade-in">
           <div className="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl p-6 shadow-2xl border border-slate-155 dark:border-slate-800 text-center">

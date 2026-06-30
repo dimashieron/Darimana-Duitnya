@@ -30,6 +30,8 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
   // 1. Sanitize simple fields
   const userName = typeof rawState.userName === 'string' && rawState.userName ? rawState.userName : (fallbackState.userName || 'User');
   const theme = (rawState.theme === 'light' || rawState.theme === 'dark' || rawState.theme === 'system') ? rawState.theme : fallbackState.theme;
+  const isActivated = typeof rawState.isActivated === 'boolean' ? rawState.isActivated : !!fallbackState.isActivated;
+  const activationCode = typeof rawState.activationCode === 'string' ? rawState.activationCode : (fallbackState.activationCode || '');
 
   // 2. Sanitize transactions list
   const rawTx = Array.isArray(rawState.transactions) ? rawState.transactions : [];
@@ -137,7 +139,9 @@ export function sanitizeAppState(rawState: any, fallbackState: AppState): AppSta
     investments,
     budgets,
     categories,
-    theme
+    theme,
+    isActivated,
+    activationCode
   };
 }
 
@@ -289,3 +293,49 @@ export function recalculateBalances(
     emergencyFund: updatedEmergencyFund
   };
 }
+
+/**
+ * Validates a license activation code locally using secure pattern-matching rules.
+ * This enables offline activation and full compatibility with serverless/static platforms like Vercel.
+ */
+export function validateCodeLocally(code: string): { success: boolean; message: string; code: string } | null {
+  const cleanCode = code.trim().toUpperCase();
+  
+  // Backup static promotional codes
+  const BACKUP_CODES = [
+    'DUITNYA100',
+    'DARIMANADUITNYA',
+    'OFFLINEPRO',
+    'BEBASBONCOS',
+    'PRO99'
+  ];
+  if (BACKUP_CODES.includes(cleanCode)) {
+    return {
+      success: true,
+      code: cleanCode,
+      message: 'Aktivasi berhasil menggunakan kode promo!'
+    };
+  }
+
+  const parts = cleanCode.split('_');
+  if (parts.length === 3) {
+    const [namePart, datePart, uniquePart] = parts;
+    const nameRegex = /^[A-Z0-9]{2,30}$/;
+    const dateRegex = /^(20[2-3][0-9])(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$/;
+    const uniqueRegex = /^[A-Z0-9]{4,12}$/;
+
+    if (nameRegex.test(namePart) && dateRegex.test(datePart) && uniqueRegex.test(uniquePart)) {
+      const year = datePart.substring(0, 4);
+      const month = datePart.substring(4, 6);
+      const day = datePart.substring(6, 8);
+      const purchaseDate = `${day}/${month}/${year}`;
+      return {
+        success: true,
+        code: cleanCode,
+        message: `Aktivasi Berhasil! Terima kasih ${namePart} (Pembelian: ${purchaseDate}).`
+      };
+    }
+  }
+  return null;
+}
+

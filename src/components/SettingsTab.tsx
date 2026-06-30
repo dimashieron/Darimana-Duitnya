@@ -6,10 +6,10 @@
 import React, { useState } from 'react';
 import { 
   Moon, Sun, Laptop, Database, RefreshCw, 
-  Trash2, CheckCircle, AlertCircle, Download, Upload
+  Trash2, CheckCircle, AlertCircle, Download, Upload, Key
 } from 'lucide-react';
 import { AppState } from '../types';
-import { recalculateBalances, sanitizeAppState } from '../utils';
+import { recalculateBalances, sanitizeAppState, validateCodeLocally } from '../utils';
 import { INITIAL_STATE } from '../data';
 
 interface SettingsTabProps {
@@ -26,6 +26,10 @@ export default function SettingsTab({
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [recalcSuccess, setRecalcSuccess] = useState(false);
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [localCode, setLocalCode] = useState('');
+  const [localError, setLocalError] = useState('');
+
+
 
   // Perform full visual local data backup exports
   const handleBackupData = () => {
@@ -169,6 +173,116 @@ export default function SettingsTab({
           </div>
         </div>
       </div>
+
+      {/* Activation Card */}
+      <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/85 rounded-2xl p-5 mb-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-50 dark:bg-amber-955/30 text-amber-500 rounded-xl">
+            <Key className="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              Aktivasi Lisensi Offline
+              {state.isActivated ? (
+                <span className="inline-flex text-[9px] bg-emerald-500 font-extrabold text-white px-1.5 py-0.5 rounded-md">PRO AKTIF</span>
+              ) : (
+                <span className="inline-flex text-[9px] bg-amber-500 font-extrabold text-white px-1.5 py-0.5 rounded-md">VERSI GRATIS</span>
+              )}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-sans mt-0.5">Akses penuh pencatatan tak terbatas di perangkat ini</p>
+          </div>
+        </div>
+
+        {state.isActivated ? (
+          <div className="bg-emerald-50/50 dark:bg-emerald-955/20 border border-emerald-100 dark:border-emerald-900/60 p-4 rounded-xl text-xs space-y-2">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Aplikasi Berhasil Diaktifkan!</span>
+            </div>
+            <p className="text-slate-500 dark:text-slate-350 text-[11px] leading-relaxed">
+              Perangkat Anda telah terdaftar secara permanen dengan kode lisensi <strong className="font-mono tracking-wider">{state.activationCode}</strong>. Batasan 10 transaksi dinonaktifkan selamanya.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 font-sans">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-xl text-xs text-slate-500 dark:text-slate-300 leading-relaxed text-[11px]">
+              Pada versi gratis, Anda dibatasi maksimal mencatat 10 transaksi. Masukkan kode aktivasi resmi di bawah ini untuk membuka akses penuh tanpa batas secara permanen di perangkat ini.
+            </div>
+            
+            <div className="flex gap-2.5">
+              <input
+                type="text"
+                placeholder="CONTOH: XXXXXXXX"
+                value={localCode}
+                onChange={(e) => {
+                  setLocalCode(e.target.value);
+                  setLocalError('');
+                }}
+                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 uppercase font-bold tracking-wider"
+              />
+              <button
+                onClick={async () => {
+                  const cleanCode = localCode.trim();
+                  if (!cleanCode) {
+                    setLocalError('Silakan masukkan kode.');
+                    return;
+                  }
+                  try {
+                    const response = await fetch('/api/activate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ code: cleanCode })
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                      updateState({
+                        isActivated: true,
+                        activationCode: result.code
+                      });
+                      setLocalCode('');
+                      setLocalError('');
+                    } else {
+                      // Server returned an error, check locally as fallback
+                      const localCheck = validateCodeLocally(cleanCode);
+                      if (localCheck && localCheck.success) {
+                        updateState({
+                          isActivated: true,
+                          activationCode: localCheck.code
+                        });
+                        setLocalCode('');
+                        setLocalError('');
+                      } else {
+                        setLocalError(result.message || 'Kode aktivasi salah!');
+                      }
+                    }
+                  } catch (e) {
+                    // Fetch failed (offline/Vercel serverless), check locally
+                    const localCheck = validateCodeLocally(cleanCode);
+                    if (localCheck && localCheck.success) {
+                      updateState({
+                        isActivated: true,
+                        activationCode: localCheck.code
+                      });
+                      setLocalCode('');
+                      setLocalError('');
+                    } else {
+                      setLocalError('Kode aktivasi tidak valid atau gagal menghubungi server.');
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer"
+              >
+                Aktivasi
+              </button>
+            </div>
+            {localError && (
+              <p className="text-[11px] text-rose-500 font-bold">{localError}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+
 
       {/* unified Kelola Data & Pemeliharaan (Data & Maintenance Actions Card) */}
       <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/85 rounded-2xl p-5 shadow-sm space-y-4">

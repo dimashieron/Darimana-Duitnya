@@ -1,4 +1,4 @@
-const CACHE_NAME = 'darimana-duitnya-v1';
+const CACHE_NAME = 'darimana-duitnya-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -34,41 +34,82 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Network first with Cache fallback
+// Fetch Event - Stale-While-Revalidate / Cache-First strategy
 self.addEventListener('fetch', (event) => {
-  // Only handle HTTP/HTTPS requests (exclude extension, external api, sheet endpoints unless desired)
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Only handle HTTP/HTTPS GET requests
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // Avoid caching custom API requests if there are any
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url);
+
+  // Allow caching of local assets AND Google Fonts (fonts.googleapis.com & fonts.gstatic.com)
+  const isLocal = url.origin === self.location.origin;
+  const isGoogleFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
+
+  if (!isLocal && !isGoogleFont) {
     return;
   }
 
+  // Avoid caching /api/ or dev server hot module replacement
+  if (url.pathname.includes('/api/') || url.pathname.includes('/@vite/') || url.pathname.includes('/node_modules/')) {
+    return;
+  }
+
+  // For navigate requests (HTML pages), use Network-First with a very short timeout, then fallback to Cache
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // If network fails (completely offline), match from cache
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Absolute fallback to root
+            return caches.match('/');
+          });
+        })
+    );
+    return;
+  }
+
+  // For static assets (JS, CSS, PNG, JPG, fonts), use Cache-First (with Network fallback and cache fill)
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Cache successful responses for GET requests
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        // Return cached version immediately for instant load
+        // But fetch in background to update cache if online (Stale-While-Revalidate)
+        fetch(event.request).then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse);
+            });
+          }
+        }).catch(() => {/* Ignore background fetch failures when offline */});
+        
+        return cachedResponse;
+      }
+
+      // If not in cache, fetch from network and cache it
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
         return networkResponse;
-      })
-      .catch(() => {
-        // Fallback to cache if network fails (e.g. user is offline)
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // If we can't fetch and it's not in cache, fallback to index.html for SPA clientside routing
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
-        });
-      })
+      });
+    })
   );
 });
