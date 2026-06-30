@@ -36,6 +36,42 @@
           navigator.serviceWorker.register('/sw.js')
             .then((reg) => {
               console.log('PWA Service Worker registered successfully on scope:', reg.scope);
+              
+              // If already controlling, send the resources
+              if (navigator.serviceWorker.controller) {
+                sendResourcesToCache();
+              }
+              
+              // Listen for controllerchange (when the new service worker takes control)
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                sendResourcesToCache();
+              });
+
+              function sendResourcesToCache() {
+                try {
+                  if (typeof performance !== 'undefined' && typeof performance.getEntriesByType === 'function') {
+                    const resources = performance.getEntriesByType('resource')
+                      .map(entry => entry.name)
+                      .filter(url => {
+                        // Cache local assets only, skip API routes, hot-reload, or node_modules
+                        const isLocal = url.startsWith(window.location.origin);
+                        const isNotApi = !url.includes('/api/');
+                        const isNotVite = !url.includes('/@vite/') && !url.includes('/node_modules/');
+                        return isLocal && isNotApi && isNotVite;
+                      });
+
+                    if (resources.length > 0 && navigator.serviceWorker.controller) {
+                      navigator.serviceWorker.controller.postMessage({
+                        type: 'CACHE_RESOURCES',
+                        urls: resources
+                      });
+                      console.log('Dispatched ' + resources.length + ' active assets to be pre-cached by Service Worker.');
+                    }
+                  }
+                } catch (e) {
+                  console.warn('Error collection and dispatching active assets to Service Worker:', e);
+                }
+              }
             })
             .catch((err) => {
               console.error('PWA Service Worker registration failed:', err);

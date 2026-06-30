@@ -1,4 +1,4 @@
-const CACHE_NAME = 'darimana-duitnya-v2';
+const CACHE_NAME = 'darimana-duitnya-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -112,4 +112,26 @@ self.addEventListener('fetch', (event) => {
       });
     })
   );
+});
+
+// Listen for dynamically collected active page assets from index.html
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CACHE_RESOURCES') {
+    const urls = event.data.urls;
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Dynamically caching active page assets:', urls);
+      return Promise.all(
+        urls.map((url) => {
+          // Double check if resource is already in cache
+          return caches.match(url).then((matched) => {
+            if (!matched) {
+              return cache.add(url).catch((err) => {
+                console.warn('Failed to dynamically cache resource:', url, err);
+              });
+            }
+          });
+        })
+      );
+    });
+  }
 });
