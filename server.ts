@@ -1,78 +1,66 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+import { verifyLicenseCode } from './src/licenseSecurity';
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Middleware to parse JSON bodies
-  app.use(express.json());
+  // Middleware to parse JSON bodies with reasonable body size limit
+  app.use(express.json({ limit: '100kb' }));
+
+  // In-memory brute-force rate limiter for activation endpoint
+  const activationAttempts = new Map<string, { count: number; firstAttempt: number }>();
+  const MAX_ATTEMPTS = 10;
+  const ATTEMPT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
   // === SECURE BACKEND API ROUTE ===
-  // Secure activation validation (the valid codes are never exposed to the client-side code!)
-  app.post('/api/activate', (req, res) => {
+  // Tamper-proof license validation with brute-force defense
+  app.post('/api/activate', async (req, res) => {
     try {
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+      const now = Date.now();
+      const clientRecord = activationAttempts.get(clientIp);
+
+      if (clientRecord) {
+        if (now - clientRecord.firstAttempt > ATTEMPT_WINDOW_MS) {
+          activationAttempts.set(clientIp, { count: 1, firstAttempt: now });
+        } else if (clientRecord.count >= MAX_ATTEMPTS) {
+          res.status(429).json({
+            success: false,
+            message: 'Terlalu banyak percobaan aktivasi yang gagal. Demi keamanan, silakan tunggu 10 menit sebelum mencoba kembali.'
+          });
+          return;
+        }
+      }
+
       const { code } = req.body;
       if (!code || typeof code !== 'string') {
         res.status(400).json({ success: false, message: 'Kode tidak valid.' });
         return;
       }
 
-      const cleanCode = code.trim().toUpperCase();
-      
-      // Check for custom dynamic pattern: NAMA_TANGGALBELI_KODEUNIK (e.g. DIMAS_20260630_XYZ88)
-      const parts = cleanCode.split('_');
-      let isPatternValid = false;
-      let buyerName = '';
-      let purchaseDate = '';
-
-      if (parts.length === 3) {
-        const [namePart, datePart, uniquePart] = parts;
-        
-        // 1. Validate Name Part (alphanumeric, at least 2 characters)
-        const nameRegex = /^[A-Z0-9]{2,30}$/;
-        // 2. Validate Date Part (YYYYMMDD format: year 2020-2035, month 01-12, day 01-31)
-        const dateRegex = /^(20[2-3][0-9])(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$/;
-        // 3. Validate Unique Code Suffix (alphanumeric, 4 to 12 characters)
-        const uniqueRegex = /^[A-Z0-9]{4,12}$/;
-
-        if (nameRegex.test(namePart) && dateRegex.test(datePart) && uniqueRegex.test(uniquePart)) {
-          isPatternValid = true;
-          buyerName = namePart;
-          
-          const year = datePart.substring(0, 4);
-          const month = datePart.substring(4, 6);
-          const day = datePart.substring(6, 8);
-          purchaseDate = `${day}/${month}/${year}`;
-        }
-      }
-
-      // We also keep fallback easy codes for quick local activation and backwards-compatibility
-      const BACKUP_CODES = [
-        'DUITNYA100',
-        'DARIMANADUITNYA',
-        'OFFLINEPRO',
-        'BEBASBONCOS',
-        'PRO99'
-      ];
-
-      if (isPatternValid) {
-        res.json({ 
-          success: true, 
-          message: `Aktivasi Berhasil! Terima kasih ${buyerName} (Pembelian: ${purchaseDate}).`, 
-          code: cleanCode 
-        });
-      } else if (BACKUP_CODES.includes(cleanCode)) {
-        res.json({ 
-          success: true, 
-          message: 'Aktivasi berhasil menggunakan kode promo!', 
-          code: cleanCode 
+      const result = verifyLicenseCode(code);
+      if (result.valid) {
+        // Clear rate limiter record on successful activation
+        activationAttempts.delete(clientIp);
+        res.json({
+          success: true,
+          message: result.message,
+          code: result.code
         });
       } else {
-        res.status(400).json({ 
-          success: false, 
-          message: 'Format kode salah! Gunakan format NAMA_TANGGAL_KODEUNIK (contoh: DIMAS_20260630_XYZ88) atau hubungi dukungan.' 
+        // Increment failed attempt counter
+        const current = activationAttempts.get(clientIp) || { count: 0, firstAttempt: now };
+        activationAttempts.set(clientIp, { count: current.count + 1, firstAttempt: current.firstAttempt });
+
+        // Timing penalty (250ms) to prevent high-speed dictionary/brute-force attacks
+        await new Promise((r) => setTimeout(r, 250));
+
+        res.status(400).json({
+          success: false,
+          message: result.message
         });
       }
     } catch (err) {

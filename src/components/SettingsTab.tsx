@@ -16,18 +16,33 @@ interface SettingsTabProps {
   state: AppState;
   updateState: (newState: Partial<AppState>) => void;
   onResetData: () => void;
+  onOpenVault?: () => void;
 }
 
 export default function SettingsTab({ 
   state, 
   updateState, 
-  onResetData
+  onResetData,
+  onOpenVault
 }: SettingsTabProps) {
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [recalcSuccess, setRecalcSuccess] = useState(false);
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [localCode, setLocalCode] = useState('');
   const [localError, setLocalError] = useState('');
+  const [vaultClickCount, setVaultClickCount] = useState(0);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  // Cooldown countdown
+  React.useEffect(() => {
+    if (cooldownSeconds > 0) {
+      const timer = setTimeout(() => {
+        setCooldownSeconds(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownSeconds]);
 
 
 
@@ -212,21 +227,36 @@ export default function SettingsTab({
             <div className="flex gap-2.5">
               <input
                 type="text"
-                placeholder="CONTOH: XXXXXXXX"
+                placeholder={cooldownSeconds > 0 ? `Tunggu ${cooldownSeconds}s...` : "CONTOH: XXXXXXXX"}
+                disabled={cooldownSeconds > 0}
                 value={localCode}
                 onChange={(e) => {
                   setLocalCode(e.target.value);
                   setLocalError('');
                 }}
-                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 uppercase font-bold tracking-wider"
+                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 uppercase font-bold tracking-wider disabled:opacity-50"
               />
               <button
+                disabled={cooldownSeconds > 0}
                 onClick={async () => {
+                  if (cooldownSeconds > 0) return;
                   const cleanCode = localCode.trim();
                   if (!cleanCode) {
                     setLocalError('Silakan masukkan kode.');
                     return;
                   }
+
+                  const registerFailedAttempt = () => {
+                    const next = failedAttempts + 1;
+                    setFailedAttempts(next);
+                    if (next >= 4) {
+                      setCooldownSeconds(10);
+                      setLocalError('Terlalu banyak percobaan salah. Tunggu 10 detik.');
+                    } else {
+                      setLocalError(`Kode aktivasi salah! (Sisa percobaan: ${4 - next})`);
+                    }
+                  };
+
                   try {
                     const response = await fetch('/api/activate', {
                       method: 'POST',
@@ -241,6 +271,7 @@ export default function SettingsTab({
                       });
                       setLocalCode('');
                       setLocalError('');
+                      setFailedAttempts(0);
                     } else {
                       // Server returned an error, check locally as fallback
                       const localCheck = validateCodeLocally(cleanCode);
@@ -251,8 +282,9 @@ export default function SettingsTab({
                         });
                         setLocalCode('');
                         setLocalError('');
+                        setFailedAttempts(0);
                       } else {
-                        setLocalError(result.message || 'Kode aktivasi salah!');
+                        registerFailedAttempt();
                       }
                     }
                   } catch (e) {
@@ -265,14 +297,15 @@ export default function SettingsTab({
                       });
                       setLocalCode('');
                       setLocalError('');
+                      setFailedAttempts(0);
                     } else {
-                      setLocalError('Kode aktivasi tidak valid atau gagal menghubungi server.');
+                      registerFailedAttempt();
                     }
                   }
                 }}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer"
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                Aktivasi
+                {cooldownSeconds > 0 ? `${cooldownSeconds}s` : 'Aktivasi'}
               </button>
             </div>
             {localError && (
@@ -371,6 +404,25 @@ export default function SettingsTab({
               <span>{importStatus.message}</span>
             </div>
           )}
+        </div>
+
+        {/* Subtle App Footer & Discreet Secret Vault Gateway */}
+        <div className="pt-4 pb-6 text-center select-none">
+          <p
+            onClick={() => {
+              const next = vaultClickCount + 1;
+              if (next >= 5) {
+                setVaultClickCount(0);
+                if (onOpenVault) onOpenVault();
+                else window.location.hash = 'seladitya';
+              } else {
+                setVaultClickCount(next);
+              }
+            }}
+            className="text-[10px] text-slate-400 dark:text-slate-600 font-mono tracking-wider cursor-pointer active:opacity-50 transition"
+          >
+            Darimana Duitnya v2.4.0 (PWA Offline)
+          </p>
         </div>
       </div>
     </div>

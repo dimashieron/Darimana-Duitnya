@@ -170,6 +170,14 @@ export default function TransactionForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        if (showToast) showToast('Hanya format gambar/foto yang diperbolehkan.', 'error');
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        if (showToast) showToast('Ukuran foto maksimal 2MB untuk menghemat penyimpanan lokal.', 'error');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setAttachment(reader.result as string);
@@ -194,6 +202,14 @@ export default function TransactionForm({
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
+      if (!file.type.startsWith('image/')) {
+        if (showToast) showToast('Hanya format gambar/foto yang diperbolehkan.', 'error');
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        if (showToast) showToast('Ukuran foto maksimal 2MB untuk menghemat penyimpanan lokal.', 'error');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setAttachment(reader.result as string);

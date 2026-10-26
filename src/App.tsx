@@ -17,6 +17,8 @@ import ReportTab from './components/ReportTab';
 import HistoryTab from './components/HistoryTab';
 import SettingsTab from './components/SettingsTab';
 import TransactionForm from './components/TransactionForm';
+import SeladityaVault from './components/SeladityaVault';
+import { verifyLicenseCode } from './licenseSecurity';
 
 export default function App() {
   // Core application state
@@ -84,6 +86,58 @@ export default function App() {
     source?: string;
     destination?: string;
   } | null>(null);
+
+  // Secret Seladitya Vault routing state
+  const [isVaultOpen, setIsVaultOpen] = useState(() => {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    return path.includes('seladitya') || hash.includes('seladitya') || search.includes('seladitya');
+  });
+
+  // 1-Click URL License Activation: ?activate=CODE
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const activateCode = params.get('activate');
+      if (activateCode) {
+        const res = verifyLicenseCode(activateCode);
+        if (res.valid) {
+          setAppState(prev => ({
+            ...prev,
+            isActivated: true,
+            activationCode: res.code
+          }));
+          showToast(res.message || '🎉 Lisensi resmi berhasil diaktifkan!', 'success');
+        } else {
+          showToast('Kode lisensi dari link tidak valid.', 'error');
+        }
+        // Clean query parameter from URL bar
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch (e) {
+      // Ignore URL errors
+    }
+  }, []);
+
+  // Sync route changes for /seladitya or #seladitya
+  useEffect(() => {
+    const checkRoute = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      if (path.includes('seladitya') || hash.includes('seladitya') || search.includes('seladitya')) {
+        setIsVaultOpen(true);
+      }
+    };
+    window.addEventListener('popstate', checkRoute);
+    window.addEventListener('hashchange', checkRoute);
+    return () => {
+      window.removeEventListener('popstate', checkRoute);
+      window.removeEventListener('hashchange', checkRoute);
+    };
+  }, []);
 
   // Custom Confirmation Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -175,6 +229,22 @@ export default function App() {
   const isDarkTheme = appState.theme === 'dark' || 
     (appState.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+  if (isVaultOpen) {
+    return (
+      <SeladityaVault
+        onBackToApp={() => {
+          setIsVaultOpen(false);
+          if (window.location.pathname.toLowerCase().includes('seladitya')) {
+            window.history.pushState({}, document.title, '/');
+          } else if (window.location.hash.toLowerCase().includes('seladitya')) {
+            window.history.pushState({}, document.title, window.location.pathname);
+          }
+        }}
+        showToast={showToast}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-800'} font-sans md:py-6 md:px-4 flex items-center justify-center transition-colors duration-200`}>
       
@@ -237,6 +307,7 @@ export default function App() {
               state={appState} 
               updateState={updateState} 
               onResetData={handleResetData}
+              onOpenVault={() => setIsVaultOpen(true)}
             />
           )}
         </main>
