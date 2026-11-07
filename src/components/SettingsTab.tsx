@@ -192,7 +192,14 @@ export default function SettingsTab({
       {/* Activation Card */}
       <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/85 rounded-2xl p-5 mb-5 shadow-sm space-y-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-50 dark:bg-amber-955/30 text-amber-500 rounded-xl">
+          <div 
+            onClick={() => {
+              if (onOpenVault) onOpenVault();
+              else window.location.hash = 'seladitya';
+            }}
+            title="Akses Vault Pemilik"
+            className="p-2 bg-amber-50 dark:bg-amber-955/30 text-amber-500 rounded-xl cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/40 transition active:scale-95"
+          >
             <Key className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>

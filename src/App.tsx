@@ -234,11 +234,7 @@ export default function App() {
       <SeladityaVault
         onBackToApp={() => {
           setIsVaultOpen(false);
-          if (window.location.pathname.toLowerCase().includes('seladitya')) {
-            window.history.pushState({}, document.title, '/');
-          } else if (window.location.hash.toLowerCase().includes('seladitya')) {
-            window.history.pushState({}, document.title, window.location.pathname);
-          }
+          window.history.pushState({}, document.title, '/');
         }}
         showToast={showToast}
       />
